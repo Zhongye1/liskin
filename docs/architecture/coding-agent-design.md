@@ -1,4 +1,4 @@
-# 本地 Coding Agent 架构设计文档
+# 本地 Agent 架构设计文档
 
 > 版本：v1.1 · 2026-06-17 · 状态：可开工
 >
@@ -18,7 +18,7 @@
 §6  │ 阶段路线图 Phase 0→3
 §7  │ 关键决策与权衡（TS vs Go、UI 选型、安全模型、Provider 抽象）
 §8  │ 风险与对策
-§9  │ 参考实现对照（Claude Code / Aider / Cline / Devin / Codin）
+§9  │ 参考实现对照（Claude Code / Aider / Cline / Devin / ）
 §10 │ 未决事项
 §11 │ Harness 框架（定义 / 何时创建 / Markdown schema 示例 / 生命周期 / 7 个工具 / .liskin/harness/ 目录）
 §12 │ IDE 插件（Daemon 化策略 / 启动流程 / /v1/ 协议 / 单进程→Daemon 演进点）
@@ -79,10 +79,10 @@
 **合理，且强烈推荐。** 理由：
 
 - **价值锚点早**：用户第一天就能用客户端单端跑通对话 + 工具调用。
-- **避免提前抽象**：在没有真实多端/多用户压力前，任何 IDL/RPC/微服务设计都是空想。参见 liskin/Codin "先画 645 个 IDL 方法"——那是 SaaS 平台型语境下的产物，套到本地 Agent 上就是过度设计。
+- **避免提前抽象**：在没有真实多端/多用户压力前，任何 IDL/RPC/微服务设计都是空想。参见 liskin/ "先画 645 个 IDL 方法"——那是 SaaS 平台型语境下的产物，套到本地 Agent 上就是过度设计。
 - **可逆**：客户端把 LLM Provider 抽象成 `LLMProvider` 接口，未来要走后端中转，只需新增一个 `RemoteGatewayProvider` 实现，业务代码零改动。
 
-### 2.3 与平台型 SaaS（Devin / Codin）的差异
+### 2.3 与平台型 SaaS（Devin / ）的差异
 
 | 维度         | 平台型 SaaS            | 本项目（本地 Agent）               |
 | ------------ | ---------------------- | ---------------------------------- |
@@ -231,7 +231,7 @@ liskarm_cc/
 
 ### 5.3 明确不做的事
 
-- ❌ 先画几百个 IDL/RPC 方法（liskin/Codin 反例）
+- ❌ 先画几百个 IDL/RPC 方法（liskin/ 反例）
 - ❌ 提前微服务化，一个 Hono 单体撑到 1k 用户没问题
 - ❌ 照搬特定框架/RPC 协议
 - ❌ 在后端做 Agent 推理逻辑（推理只在客户端，后端是无状态网关）
@@ -319,15 +319,15 @@ type LLMEvent =
 
 ## 9. 参考实现对照
 
-| 产品              | 形态                   | 后端                  | UI             | 关系                            |
-| ----------------- | ---------------------- | --------------------- | -------------- | ------------------------------- |
-| **Claude Code**   | 本地 CLI / VSCode 扩展 | 仅 Anthropic API      | Terminal + IDE | **形态最接近**，参考基准        |
-| **Cursor CLI**    | 本地 CLI               | 有（Cursor 自营网关） | Terminal       | 后端是商业 Key 托管，MVP 不需要 |
-| **Aider**         | 本地 CLI（Python）     | 无                    | Terminal       | 架构理念接近：单端 + 自带 Key   |
-| **Cline**         | VSCode 扩展（TS）      | 无                    | IDE 侧栏       | TS 同生态，工具集设计可参考     |
-| **Devin / Codin** | 云端 SaaS              | 重后端、多服务        | Web            | **不参考**：会引入过度设计      |
+| 产品            | 形态                   | 后端                  | UI             | 关系                            |
+| --------------- | ---------------------- | --------------------- | -------------- | ------------------------------- |
+| **Claude Code** | 本地 CLI / VSCode 扩展 | 仅 Anthropic API      | Terminal + IDE | **形态最接近**，参考基准        |
+| **Cursor CLI**  | 本地 CLI               | 有（Cursor 自营网关） | Terminal       | 后端是商业 Key 托管，MVP 不需要 |
+| **Aider**       | 本地 CLI（Python）     | 无                    | Terminal       | 架构理念接近：单端 + 自带 Key   |
+| **Cline**       | VSCode 扩展（TS）      | 无                    | IDE 侧栏       | TS 同生态，工具集设计可参考     |
+| **Devin / **    | 云端 SaaS              | 重后端、多服务        | Web            | **不参考**：会引入过度设计      |
 
-**立场**：靠近 Aider/Claude Code，远离 Devin/Codin。
+**立场**：靠近 Aider/Claude Code，远离 Devin/。
 
 ---
 
@@ -345,7 +345,7 @@ type LLMEvent =
 
 ### 11.1 定义与定位
 
-**Harness** 是 Coding Agent 在执行复杂任务时维护的一份**任务真相文档**：以 Markdown 文件形式落盘，记录用户意图、待办节点、已完成节点、闸门、理解笔记与控制状态，作为「可中断、可重连、可审计」的执行单元。
+**Harness** 是 g Agent 在执行复杂任务时维护的一份**任务真相文档**：以 Markdown 文件形式落盘，记录用户意图、待办节点、已完成节点、闸门、理解笔记与控制状态，作为「可中断、可重连、可审计」的执行单元。
 
 **与会话历史的区别**：
 

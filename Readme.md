@@ -25,41 +25,7 @@
 | ----------------- | --- | ---------------------------------------------------------------------------------------------------------------- |
 | `packages/core`   | L1  | Agent 状态机、`runAgent` 主循环、`Op`/`EventMsg` 协议、`KernelClient` 接口、`InProcessKernelClient`              |
 | `packages/tools`  | L2  | `ToolRegistry` + Sandbox（路径白名单 / 危险命令拦截 / 确认策略）、内置工具 `fs.read` / `fs.write` / `shell.exec` |
-| `packages/llm`    | L3  | `LLMProvider` 接口 + OpenAI 兼容适配器                                              |
-| `packages/server` | L4  | Hono daemon：HTTP/SSE，把 Op 翻译给内核、把 EventMsg 序列化成 SSE，SQLite 持久化                                 |
-| `client/`         | L4  | 产品入口 CLI：`agent serve`（daemon）、`agent exec`（headless 一次性任务）                                       |
-| `web/`            | L4  | React + Vite + Tailwind（旧实现，待重写为时间线渲染）                                                            |
-
-**搁置模块**：`server/`（Go + Gin + faasrouter + Thrift IDL）为历史遗留，Phase 2 后端按需时再激活，当前不修改。详见 `LEGACY.md`。
-
-# liskin
-
-本地 Coding Agent：在本地仓库里用自然语言完成「读代码 → 改代码 → 跑命令 → 看结果」的循环。
-
-内核（agent 状态机 + 工具 + 模型适配）与调用方（CLI / Web / IDE）完全解耦——内核不知道自己是被 CLI 还是 Web 调用，越靠内的层越稳定、越不该知道外面是谁在用它。
-
-## 架构
-
-```
-依赖方向（单向，越往下越稳定）
-─────────────────────────────────────────────────────────
-  L4 接入层     client/ (CLI)  ·  web/  ·  (未来 IDE 插件)
-                     ↓ 只依赖 KernelClient 接口 + 协议类型
-  传输适配      packages/server (daemon: HTTP/SSE)        ← Web 必经
-                     ↓
-  ┄┄┄┄┄┄ 协议边界（Op / EventMsg / KernelClient）┄┄┄┄┄┄
-                     ↑
-  L3 模型适配   packages/llm   (LLMProvider → LLMPort)
-  L2 工具/执行  packages/tools (ToolRegistry → ToolPort)
-  L1 内核       packages/core  (runAgent + ports + KernelClient)
-                     ↑ 不依赖任何外层
-```
-
-| 包                | 层  | 职责                                                                                                             |
-| ----------------- | --- | ---------------------------------------------------------------------------------------------------------------- |
-| `packages/core`   | L1  | Agent 状态机、`runAgent` 主循环、`Op`/`EventMsg` 协议、`KernelClient` 接口、`InProcessKernelClient`              |
-| `packages/tools`  | L2  | `ToolRegistry` + Sandbox（路径白名单 / 危险命令拦截 / 确认策略）、内置工具 `fs.read` / `fs.write` / `shell.exec` |
-| `packages/llm`    | L3  | `LLMProvider` 接口 + OpenAI 兼容适配器                                              |
+| `packages/llm`    | L3  | `LLMProvider` 接口 + OpenAI 兼容适配器                                                                           |
 | `packages/server` | L4  | Hono daemon：HTTP/SSE，把 Op 翻译给内核、把 EventMsg 序列化成 SSE，SQLite 持久化                                 |
 | `client/`         | L4  | 产品入口 CLI：`agent serve`（daemon）、`agent exec`（headless 一次性任务）                                       |
 | `web/`            | L4  | React + Vite + Tailwind（旧实现，待重写为时间线渲染）                                                            |
@@ -232,7 +198,6 @@ pnpm format         # prettier
   ## 下一步可选项
 
   按 coding-agent-design.md §6 路线图,下一站是 Phase 1 完善(目标:终端常驻使用,覆盖 80% 日常编码)。Phase 1 的几条支线相互独立,可挑顺序做:
-
   1. 收尾性
   - 清掉剩余 5 个未用依赖(@radix-ui/\*/ahooks/axios/swr/usehooks-ts)
   - bundle 拆分:react-markdown/highlight.js 用 dynamic import,消除 614KB chunk 警告
