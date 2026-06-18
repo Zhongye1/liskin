@@ -1,0 +1,96 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "warn",
+    "pedantic": "warn",
+    "style": "warn",
+    "restriction": "off",
+    "nursery": "off"
+  },
+  "env": {
+    "node": true,
+    "es2022": true
+  },
+  "globals": {},
+  "rules": {
+    "no-console": "warn",
+    "no-debugger": "error",
+    "no-unused-vars": "error",
+    "eqeqeq": ["error", "always"],
+    "prefer-const": "error",
+    "no-var": "error",
+    "no-empty": "error",
+    "no-empty-function": "warn",
+    "no-throw-literal": "error",
+    "default-case": "off",
+    "no-implicit-coercion": "warn",
+    "no-await-in-loop": "off",
+    "no-underscore-dangle": "off",
+    "no-magic-numbers": "off",
+    "no-inline-comments": "off",
+    "no-ternary": "off",
+    "id-length": "off",
+    "func-style": "off",
+    "func-names": "off",
+    "max-lines-per-function": "off",
+    "max-statements": "off",
+    "max-classes-per-file": "off",
+    "capitalized-comments": "off",
+    "require-await": "off",
+    "sort-imports": "off",
+    "sort-keys": "off",
+    "no-duplicate-imports": "off",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-non-null-assertion": "warn",
+    "typescript/explicit-function-return-type": "off",
+    "typescript/consistent-type-imports": "error",
+    "typescript/no-unused-vars": "error",
+    "typescript/method-signature-style": "off",
+    "typescript/parameter-properties": "off",
+    "import/no-default-export": "off",
+    "import/no-cycle": "error",
+    "unicorn/no-null": "off",
+    "unicorn/no-useless-collection-argument": "off",
+    "unicorn/prefer-node-protocol": "warn",
+    "unicorn/filename-case": [
+      "warn",
+      {
+        "cases": {
+          "kebabCase": true
+        }
+      }
+    ],
+    "unicorn/no-array-sort": "off"
+  },
+  "overrides": [
+    {
+      "files": ["client/src/cli.ts", "**/bin/**", "**/scripts/**"],
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["**/*.test.ts", "**/*.spec.ts", "**/test/**", "**/__tests__/**"],
+      "rules": {
+        "typescript/no-non-null-assertion": "off"
+      }
+    },
+    {
+      "files": ["web/**"],
+      "rules": {
+        "unicorn/filename-case": "off",
+        "unicorn/prefer-export-from": "off",
+        "no-console": "off"
+      }
+    }
+  ],
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/node_modules/**",
+    "**/*.tsbuildinfo",
+    "server/**",
+    "**/coverage/**"
+  ]
+}
