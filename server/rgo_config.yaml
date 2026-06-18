@@ -1,0 +1,8 @@
+version: v1
+services:
+  - name: prd
+    idl_path: ./idl/prd/prd.thrift
+    out_dir: ./gen/prd
+  - name: agw
+    idl_path: ./idl/agw/agw.thrift
+    out_dir: ./gen/agw

@@ -1,0 +1,14 @@
+service:
+  name: faasrouter
+  runtime: go
+  entrypoint: ./main.go
+http:
+  routes:
+    - method: POST
+      path: /gateway/model
+    - method: POST
+      path: /forward
+    - method: POST
+      path: /forward/stream
+    - method: GET
+      path: /healthz
