@@ -1,0 +1,34 @@
+{
+  "name": "@liskin/client",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "agent": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint src test"
+  },
+  "dependencies": {
+    "@liskin/core": "workspace:^",
+    "@liskin/llm": "workspace:^",
+    "@liskin/server": "workspace:^",
+    "@liskin/tools": "workspace:^",
+    "commander": "^15.0.0",
+    "dotenv": "^17.4.2"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "name": "liskin-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "lint": "oxlint src test",
+    "lint:fix": "oxlint src test --fix"
+  },
+  "dependencies": {
+    "@liskin/core": "workspace:*",
+    "@radix-ui/react-dialog": "^1.1.16",
+    "@radix-ui/react-select": "^2.3.0",
+    "@radix-ui/react-tooltip": "^1.2.9",
+    "@tanstack/react-virtual": "^3.14.3",
+    "ahooks": "^3.9.7",
+    "axios": "^1.17.0",
+    "class-variance-authority": "^0.7.1",
+    "highlight.js": "^11.11.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^6.28.0",
+    "rehype-highlight": "^7.0.2",
+    "remark-gfm": "^4.0.1",
+    "sonner": "^2.0.7",
+    "swr": "^2.4.1",
+    "tailwind-merge": "^3.6.0",
+    "usehooks-ts": "^3.1.1",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "oxlint": "^1.69.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "vitest": "^2.0.0"
+  }
+}

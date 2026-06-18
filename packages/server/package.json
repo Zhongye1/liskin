@@ -1,0 +1,35 @@
+{
+  "name": "@liskin/server",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint src test"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.0.5",
+    "@liskin/core": "workspace:^",
+    "@liskin/llm": "workspace:^",
+    "@liskin/tools": "workspace:^",
+    "better-sqlite3": "^12.11.1",
+    "hono": "^4.12.25",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13"
+  }
+}
