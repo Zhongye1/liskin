@@ -4,6 +4,33 @@ import type {
   ChatCompletionTool,
 } from 'openai/resources/chat/completions';
 
+// —— 工具名规范化 —— //
+
+/**
+ * OpenAI 兼容 API 要求工具名只含 [a-zA-Z0-9_-]。
+ * 把非法字符替换为下划线，合并连续下划线，限长 64。
+ */
+export function sanitizeToolName(name: string): string {
+  return name
+    .replaceAll(/[^a-zA-Z0-9_-]/g, '_')
+    .replaceAll(/_+/g, '_')
+    .slice(0, 64);
+}
+
+/** sanitized → original 的反向映射表 */
+export type ToolNameMap = Map<string, string>;
+
+/**
+ * 根据原始名反查，找不到则返回原名。
+ * 用于 tool_call 响应从 sanitized 名还原为 ToolRegistry 能识别的原名。
+ */
+export function resolveOriginalName(sanitized: string, map?: ToolNameMap): string {
+  if (!map || map.size === 0) {return sanitized;}
+  return map.get(sanitized) ?? sanitized;
+}
+
+// —— Msg / Tool 序列化 —— //
+
 function msgToOpenAI(m: Msg): ChatCompletionMessageParam {
   switch (m.role) {
     case 'system': {
@@ -17,7 +44,9 @@ function msgToOpenAI(m: Msg): ChatCompletionMessageParam {
         id: c.id,
         type: 'function' as const,
         function: {
-          name: c.name,
+          // 消息里的 tool_call name 也需要 sanitize：
+          // 流解析时 desanitize 回了原名（fs.read），再次发给 API 必须规范化
+          name: sanitizeToolName(c.name),
           arguments: JSON.stringify(c.args ?? {}),
         },
       }));
@@ -37,30 +66,41 @@ function msgToOpenAI(m: Msg): ChatCompletionMessageParam {
   }
 }
 
-/**
- * 把内核的 `Msg[]` 翻译为 OpenAI 的 `ChatCompletionMessageParam[]`。
- *
- * - assistant 消息没有 content 时（仅 tool_calls）使用 `null`，符合 OpenAI 协议
- * - tool_calls 的 args 必须序列化为字符串
- */
 export function toOpenAIMessages(messages: Msg[]): ChatCompletionMessageParam[] {
   return messages.map((m) => msgToOpenAI(m));
 }
 
+/** toOpenAITools 的返回值：规范化后的 tools 数组 + sanitized→original 映射表。 */
+export interface NormalizedTools {
+  tools: ChatCompletionTool[] | undefined;
+  nameMap: ToolNameMap;
+}
+
 /**
- * 把内核的 `ToolDefinition[]` 翻译为 OpenAI 的 `tools` 字段。
- * 空数组或 undefined 都返回 undefined（让 OpenAI 不带 tools 字段）。
+ * 把内核的 `ToolDefinition[]` 翻译为 OpenAI 的 `tools` 字段，
+ * 同时对 tool name 做规范化（只保留 [a-zA-Z0-9_-]），
+ * 并返回 sanitized→original 反向映射供流解析时还原。
  */
-export function toOpenAITools(tools?: ToolDefinition[]): ChatCompletionTool[] | undefined {
+export function toOpenAITools(tools?: ToolDefinition[]): NormalizedTools {
+  const nameMap: ToolNameMap = new Map();
   if (!tools || tools.length === 0) {
-    return undefined;
+    return { tools: undefined, nameMap };
   }
-  return tools.map((t) => ({
-    type: 'function',
-    function: {
-      name: t.name,
-      description: t.description,
-      parameters: t.parameters,
-    },
-  }));
+
+  const result: ChatCompletionTool[] = [];
+  for (const t of tools) {
+    const sanitized = sanitizeToolName(t.name);
+    if (sanitized !== t.name) {
+      nameMap.set(sanitized, t.name);
+    }
+    result.push({
+      type: 'function',
+      function: {
+        name: sanitized,
+        description: t.description,
+        parameters: t.parameters,
+      },
+    });
+  }
+  return { tools: result, nameMap };
 }

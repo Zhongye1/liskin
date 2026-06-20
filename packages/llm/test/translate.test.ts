@@ -26,7 +26,7 @@ describe('translate', () => {
         {
           id: 'c1',
           type: 'function',
-          function: { name: 'fs.read', arguments: '{"path":"a.ts"}' },
+          function: { name: 'fs_read', arguments: '{"path":"a.ts"}' },
         },
       ],
     });
@@ -52,10 +52,14 @@ describe('translate', () => {
     });
   });
 
-  it('TC8c — toOpenAITools 转换 + 空数组 / 缺省都返回 undefined', () => {
-    expect(toOpenAITools()).toBeUndefined();
-    expect(toOpenAITools([])).toBeUndefined();
+  it('TC8c — toOpenAITools 空数组 / 缺省返回 nameMap 为空', () => {
+    expect(toOpenAITools().tools).toBeUndefined();
+    expect(toOpenAITools([]).tools).toBeUndefined();
+    expect(toOpenAITools().nameMap.size).toBe(0);
+    expect(toOpenAITools([]).nameMap.size).toBe(0);
+  });
 
+  it('TC8d — toOpenAITools 对含非法字符的工具名做 sanitize 并建立映射', () => {
     const tools: ToolDefinition[] = [
       {
         name: 'fs.read',
@@ -66,12 +70,12 @@ describe('translate', () => {
         },
       },
     ];
-    const out = toOpenAITools(tools);
+    const { tools: out, nameMap } = toOpenAITools(tools);
     expect(out).toEqual([
       {
         type: 'function',
         function: {
-          name: 'fs.read',
+          name: 'fs_read', // 点号被替换为下划线
           description: 'read a file',
           parameters: {
             type: 'object',
@@ -80,5 +84,6 @@ describe('translate', () => {
         },
       },
     ]);
+    expect(nameMap.get('fs_read')).toBe('fs.read'); // sanitized → original
   });
 });

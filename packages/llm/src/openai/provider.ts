@@ -31,7 +31,7 @@ export class OpenAIProvider implements LLMPort {
       }
 
       const messages = toOpenAIMessages(req.messages);
-      const tools = toOpenAITools(req.tools);
+      const { tools, nameMap } = toOpenAITools(req.tools);
 
       const stream = await this.client.chat.completions.create(
         {
@@ -44,7 +44,7 @@ export class OpenAIProvider implements LLMPort {
         { signal: req.signal },
       );
 
-      yield* parseOpenAIStream(stream, req.signal);
+      yield* parseOpenAIStream(stream, req.signal, nameMap);
     } catch (error) {
       // 必修 #3：用户取消静默语义 — 归一化后若 code='aborted'，直接 return，不再 yield error
       const errorEvent = normalizeError(error);
