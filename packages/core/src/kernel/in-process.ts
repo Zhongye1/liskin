@@ -1,15 +1,22 @@
 /* eslint-disable max-lines -- 协议核心实现：会话+回合+确认+持久化内聚于此，拆分会破坏可读性 */
+import type {
+  EventMsg,
+  KernelClient,
+  SessionHandle,
+  SessionInfo,
+  TurnEndReason,
+  ToolCall,
+  ToolDefinition,
+  ToolResult,
+} from '@liskin/protocol';
+
 import type { LLMPort } from '../ports/llm-port.js';
 import type { StorePort } from '../ports/store-port.js';
 import type { ToolPort, ToolInvokeOptions } from '../ports/tool-port.js';
 import type { HarnessPort } from '../harness/harness-port.js';
 import type { Msg } from '../types/messages.js';
 import type { AgentEvent } from '../types/events.js';
-import type { ToolCall, ToolDefinition, ToolResult } from '../types/messages.js';
 import { runAgent } from '../agent/loop.js';
-
-import type { KernelClient } from './client-port.js';
-import type { EventMsg, SessionHandle, SessionInfo, TurnEndReason } from './types.js';
 import { AsyncQueue, Deferred } from './async-queue.js';
 
 export interface InProcessKernelOptions {

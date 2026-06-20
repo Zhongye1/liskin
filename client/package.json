@@ -24,8 +24,10 @@
     "lint": "oxlint src test"
   },
   "dependencies": {
+    "@liskin/config": "workspace:^",
     "@liskin/core": "workspace:^",
     "@liskin/llm": "workspace:^",
+    "@liskin/protocol": "workspace:^",
     "@liskin/server": "workspace:^",
     "@liskin/tools": "workspace:^",
     "commander": "^15.0.0",

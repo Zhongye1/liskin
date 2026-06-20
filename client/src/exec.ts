@@ -7,7 +7,8 @@
  * 设计依据：docs/architecture/kernel-client-protocol.md §6.3 Step 2。
  * headless 是「不渲染 UI 的事件消费者」，与 agent chat 同根协议。
  */
-import { InMemoryStore, InProcessKernelClient, type EventMsg } from '@liskin/core';
+import type { EventMsg } from '@liskin/protocol';
+import { InMemoryStore, InProcessKernelClient } from '@liskin/core';
 import { createProvider } from '@liskin/llm';
 import { ToolRegistry } from '@liskin/tools';
 

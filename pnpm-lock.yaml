@@ -48,12 +48,18 @@ importers:
 
   client:
     dependencies:
+      '@liskin/config':
+        specifier: workspace:^
+        version: link:../packages/config
       '@liskin/core':
         specifier: workspace:^
         version: link:../packages/core
       '@liskin/llm':
         specifier: workspace:^
         version: link:../packages/llm
+      '@liskin/protocol':
+        specifier: workspace:^
+        version: link:../packages/protocol
       '@liskin/server':
         specifier: workspace:^
         version: link:../packages/server
@@ -67,8 +73,17 @@ importers:
         specifier: ^17.4.2
         version: 17.4.2
 
+  packages/config:
+    dependencies:
+      zod:
+        specifier: ^3.23.0
+        version: 3.25.76
+
   packages/core:
     dependencies:
+      '@liskin/protocol':
+        specifier: workspace:^
+        version: link:../protocol
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -81,6 +96,12 @@ importers:
       openai:
         specifier: ^4.78.1
         version: 4.104.0(zod@3.25.76)
+
+  packages/protocol:
+    dependencies:
+      zod:
+        specifier: ^3.23.0
+        version: 3.25.76
 
   packages/server:
     dependencies:

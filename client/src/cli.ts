@@ -5,9 +5,8 @@
 // 调用 runExec(prompt, opts)
 
 // shebang + imports
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { existsSync, mkdirSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { Command } from 'commander';
 
 // liskin 内部模块
@@ -17,34 +16,11 @@ import { startServer } from '@liskin/server';
 import { runExec } from './exec.js';
 import { runChat } from './chat.js';
 
-// cli 接口类型定义
-import type { Config } from './types/cli-config.js';
+// 统一配置层
+import { loadConfig, defaultDbPath } from '@liskin/config';
 
 // 默认系统提示词
 import { DEFAULT_SYSTEM_PROMPT } from './prompts/default-system.js';
-
-// 读 ~/.liskin/config.json 相关配置
-function loadConfig(): Config {
-  const configPath = join(homedir(), '.liskin', 'config.json');
-  if (!existsSync(configPath)) {
-    return {};
-  }
-  try {
-    return JSON.parse(readFileSync(configPath, 'utf8')) as Config;
-  } catch (error) {
-    console.error(`[liskin] failed to read ${configPath}:`, (error as Error).message);
-    return {};
-  }
-}
-
-// 确保~/.liskin/目录存在 + 返回 db 路径
-function defaultDbPath(): string {
-  const dir = join(homedir(), '.liskin');
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
-  return join(dir, 'sessions.sqlite');
-}
 
 // 注册新命令 agent
 // agent serve [--port 8787] [--host 127.0.0.1] [--db <path>]

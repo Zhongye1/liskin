@@ -1,5 +1,5 @@
 {
-  "name": "@liskin/core",
+  "name": "@liskin/config",
   "version": "0.0.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -16,12 +16,11 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint src test"
   },
   "dependencies": {
-    "@liskin/protocol": "workspace:^",
-    "zod": "^3.25.76"
+    "zod": "^3.23.0"
   }
 }

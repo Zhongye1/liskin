@@ -4,11 +4,9 @@
  * 用 InProcessKernelClient 直连 kernel（in-process），终端内多轮对话。
  * 设计依据：docs/architecture/kernel-client-protocol.md §6.3 Step 2。
  */
-import { existsSync, mkdirSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { join } from 'node:path';
 import { createInterface, type Interface as Readline } from 'node:readline';
 
+import { defaultChatDbPath } from '@liskin/config';
 import { InMemoryStore, InProcessKernelClient } from '@liskin/core';
 import { createProvider } from '@liskin/llm';
 import { SqliteStore } from '@liskin/server';
@@ -276,12 +274,4 @@ async function showSessions(kernel: InProcessKernelClient): Promise<void> {
     process.stdout.write(`  ${s.id}  msgs=${s.messageCount}  updated=${date}\n`);
   }
   process.stdout.write('\n');
-}
-
-function defaultChatDbPath(): string {
-  const dir = join(homedir(), '.liskin');
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
-  return join(dir, 'chat-sessions.sqlite');
 }

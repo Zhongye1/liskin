@@ -4,7 +4,7 @@
  * agent exec 与 agent chat 共享的事件→终端输出映射。
  * 不含任何业务状态，纯函数 + ANSI escape codes。
  */
-import type { ToolCall, ToolResult } from '@liskin/core';
+import type { ToolCall, ToolResult } from '@liskin/protocol';
 
 // —— ANSI 常量 —— //
 const CYAN = '\u001B[36m';
