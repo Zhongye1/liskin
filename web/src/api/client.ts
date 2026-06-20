@@ -10,6 +10,7 @@ import type {
   SessionHandle,
   SessionInfo,
   SessionRecord,
+  SubmitOp,
 } from '@liskin/protocol';
 
 import { sessions } from './Http_Req/http';
@@ -42,11 +43,7 @@ export class HttpSseKernelClient implements KernelClient {
 
   // —— 回合流式（流式类，fetch + ReadableStream）—— //
 
-  async *submit(op: {
-    sessionId: string;
-    content: string;
-    maxTurns?: number;
-  }): AsyncIterable<EventMsg> {
+  async *submit(op: SubmitOp): AsyncIterable<EventMsg> {
     const body: UserTurnBody = { content: op.content };
     if (op.maxTurns) {
       body.maxTurns = op.maxTurns;

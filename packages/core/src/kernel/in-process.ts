@@ -5,6 +5,7 @@ import type {
   SessionHandle,
   SessionInfo,
   SessionRecord,
+  SubmitOp,
   TurnEndReason,
   ToolCall,
   ToolDefinition,
@@ -171,12 +172,7 @@ export class InProcessKernelClient implements KernelClient {
 
   // —— 回合事件流 —— //
 
-  async *submit(op: {
-    type: 'UserTurn';
-    sessionId: string;
-    content: string;
-    maxTurns?: number;
-  }): AsyncIterable<EventMsg> {
+  async *submit(op: SubmitOp): AsyncIterable<EventMsg> {
     const { sessionId, content } = op;
     const record = await this.store.loadSession(sessionId);
     if (!record) {

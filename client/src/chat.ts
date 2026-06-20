@@ -144,6 +144,7 @@ export async function runChat(opts: ChatOptions): Promise<void> {
 
 // —— Turn 处理 —— //
 
+// eslint-disable-next-line max-params -- 内部函数，bundle kernel/rl/sig 等上下文参数，拆对象属过度工程
 async function processTurn(
   kernel: InProcessKernelClient,
   sessionId: string,

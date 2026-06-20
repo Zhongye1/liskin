@@ -120,7 +120,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       const record = await kernel.getRecord(id);
       // 仅当用户未在此期间切到别的会话时才回填
       if (get().activeSessionId === id) {
-        set({ turns: messagesToTurns(record.messages) });
+        // protocol.SessionRecord.messages 是 unknown[]，此处实际为 Msg[]
+        set({ turns: messagesToTurns(record.messages as Parameters<typeof messagesToTurns>[0]) });
       }
     } catch (error) {
       set({ error: { message: error instanceof Error ? error.message : String(error) } });
@@ -143,7 +144,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }));
 
     try {
-      for await (const ev of kernel.submit({ sessionId, content })) {
+      for await (const ev of kernel.submit({ type: 'UserTurn', sessionId, content })) {
         reduceEvent({ set, turnId: turn.id }, ev);
       }
       // 流结束：强制 flush 残留 token，保证最后一帧不丢

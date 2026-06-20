@@ -89,6 +89,7 @@ export async function* parseOpenAIStream(
   }
 
   const pendingByIndex = new Map<number, PendingToolCall>();
+  // eslint-disable-next-line init-declarations -- 跨 chunk 累积，初始值由第一个 usage chunk 赋值
   let usage: { inputTokens?: number; outputTokens?: number } | undefined;
   let earlyTerminated = false;
 
@@ -137,6 +138,7 @@ export async function* parseOpenAIStream(
 
 type ChoiceOutcome = 'continue' | 'flushed' | 'terminated' | 'aborted';
 
+// eslint-disable-next-line max-params -- signal + nameMap 是必要的透传，拆对象无意义
 async function* handleChoice(
   choice: ChatCompletionChunk.Choice,
   pendingByIndex: Map<number, PendingToolCall>,
