@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="./assets/logo.jpg" width="160" alt="Liskin — 面向开发者的自主编程 Agent" />
+    <img src="./assets/shu.jpg" width="160" alt="Liskin — 面向开发者的自主编程 Agent" />
 </div>
 
 <br/>
@@ -222,6 +222,8 @@ cp .env.example .env
 
 ```bash
 # 最简启动（确认策略默认 ask）
+pnpm run cli
+
 ./scripts/dev.sh chat
 
 # 指定模型和自定义 system prompt

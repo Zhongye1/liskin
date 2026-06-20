@@ -10,6 +10,7 @@
     "build": "pnpm -r --filter \"./packages/**\" --filter \"./client\" run build",
     "dev": "bash scripts/dev.sh",
     "dev:no-build": "bash scripts/dev.sh --no-build",
+    "cli": "bash scripts/dev.sh chat",
     "stop": "bash scripts/dev.sh stop",
     "logs": "bash scripts/dev.sh logs",
     "test": "pnpm -r --filter \"./packages/**\" --filter \"./client\" --filter \"./web\" run test",
