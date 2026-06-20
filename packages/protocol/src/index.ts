@@ -3,8 +3,8 @@ export { ToolCallSchema, ToolResultSchema, ToolDefinitionSchema } from './tool-t
 export type { ToolCall, ToolResult, ToolDefinition } from './tool-types.js';
 
 // —— Session —— //
-export { SessionInfoSchema, SessionHandleSchema } from './session.js';
-export type { SessionInfo, SessionHandle } from './session.js';
+export { SessionInfoSchema, SessionHandleSchema, SessionRecordSchema } from './session.js';
+export type { SessionInfo, SessionHandle, SessionRecord } from './session.js';
 
 // —— Op —— //
 export { OpSchema } from './op.js';

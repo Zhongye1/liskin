@@ -2,17 +2,24 @@
  * @liskin/web API 层
  *
  * 集中管理所有后端接口请求，分为两类通道：
- * - 控制类（http.ts）：axios 实例，短请求（session CRUD、interrupt、confirm、provider CRUD）
- * - 流式类（stream.ts）：fetch + ReadableStream，SSE 长连接消费
+ * - 控制类（http.ts）：axios 实例，短请求
+ * - 流式类（stream.ts）：fetch + ReadableStream，SSE 长连接
  *
- * 对上层暴露统一的 KernelClient 接口（client.ts），axios/fetch 差异封在内部。
+ * 协议类型（KernelClient / EventMsg / SessionHandle 等）统一来自 @liskin/protocol。
  */
 
-// 类型
+// —— 协议类型（来自 @liskin/protocol）—— //
+export type {
+  EventMsg,
+  KernelClient,
+  SessionHandle,
+  SessionInfo,
+  SessionRecord,
+} from '@liskin/protocol';
+
+// —— API 层专属类型 —— //
 export {
   ApiError,
-  type KernelClient,
-  type SessionRecord,
   type CreateSessionBody,
   type UserTurnBody,
   type ConfirmBody,
@@ -20,11 +27,10 @@ export {
   type ProviderCreateInput,
   type ProviderUpdateInput,
 } from './types/types';
-export type { EventMsg, SessionHandle, SessionInfo } from './types/types';
 
-// 客户端
+// —— 客户端 —— //
 export { HttpSseKernelClient } from './client';
 
-// 底层通道（按需直接使用）
+// —— 底层通道 —— //
 export { sessions, providers, tools } from './Http_Req/http';
 export { streamRequest, parseSSEBlock } from './Http_Req/stream';

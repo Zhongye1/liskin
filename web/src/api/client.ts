@@ -6,18 +6,15 @@
  */
 import type {
   EventMsg,
+  KernelClient,
   SessionHandle,
   SessionInfo,
-} from '@liskin/core';
+  SessionRecord,
+} from '@liskin/protocol';
 
 import { sessions } from './Http_Req/http';
 import { streamRequest } from './Http_Req/stream';
-import type {
-  CreateSessionBody,
-  KernelClient,
-  SessionRecord,
-  UserTurnBody,
-} from './types/types';
+import type { CreateSessionBody, UserTurnBody } from './types/types';
 
 export class HttpSseKernelClient implements KernelClient {
   // —— 会话生命周期（控制类，axios）—— //

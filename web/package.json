@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@liskin/core": "workspace:*",
+    "@liskin/protocol": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.16",
     "@radix-ui/react-select": "^2.3.0",
     "@radix-ui/react-tooltip": "^1.2.9",

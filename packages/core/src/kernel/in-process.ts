@@ -4,6 +4,7 @@ import type {
   KernelClient,
   SessionHandle,
   SessionInfo,
+  SessionRecord,
   TurnEndReason,
   ToolCall,
   ToolDefinition,
@@ -128,6 +129,14 @@ export class InProcessKernelClient implements KernelClient {
     if (this.store.deleteSession) {
       await this.store.deleteSession(sessionId);
     }
+  }
+
+  async getRecord(sessionId: string): Promise<SessionRecord> {
+    const record = await this.store.loadSession(sessionId);
+    if (!record) {
+      throw new Error(`session not found: ${sessionId}`);
+    }
+    return record;
   }
 
   async listSessions(): Promise<SessionInfo[]> {

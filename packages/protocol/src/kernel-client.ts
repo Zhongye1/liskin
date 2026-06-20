@@ -1,6 +1,6 @@
 import type { SubmitOp } from './op.js';
 import type { EventMsg } from './event-msg.js';
-import type { SessionHandle, SessionInfo } from './session.js';
+import type { SessionHandle, SessionInfo, SessionRecord } from './session.js';
 
 /**
  * Kernel 对外的服务接口（外层协议边界）。
@@ -22,6 +22,9 @@ export interface KernelClient {
   resumeSession(sessionId: string): Promise<SessionHandle>;
   closeSession(sessionId: string): Promise<void>;
   listSessions(): Promise<SessionInfo[]>;
+
+  /** 读取会话完整记录（含消息历史），用于恢复/回放。 */
+  getRecord(sessionId: string): Promise<SessionRecord>;
 
   /** 投递 Op 并取回本轮事件流。 */
   submit(op: SubmitOp): AsyncIterable<EventMsg>;

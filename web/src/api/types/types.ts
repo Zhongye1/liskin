@@ -1,14 +1,8 @@
 /**
- * API 层类型定义：集中管理所有接口的请求/响应类型。
+ * API 层类型定义：HTTP 请求/响应体 + Provider 类型。
+ * 协议类型（KernelClient / EventMsg / SessionHandle 等）统一从 @liskin/protocol import。
  */
-import type {
-  EventMsg,
-  SessionHandle,
-  SessionInfo,
-  SessionRecord,
-  ToolCall,
-  ToolDefinition,
-} from '@liskin/core';
+import type { KernelClient, SessionRecord } from '@liskin/protocol';
 
 // —— 基础 —— //
 
@@ -22,15 +16,8 @@ export class ApiError extends Error {
   }
 }
 
-// —— 从 core 重导出 Web 需要的类型 —— //
-export type {
-  EventMsg,
-  SessionHandle,
-  SessionInfo,
-  SessionRecord,
-  ToolCall,
-  ToolDefinition,
-};
+// —— 从 protocol 重导出 —— //
+export type { KernelClient, SessionRecord };
 
 export interface CreateSessionBody {
   cwd?: string;
@@ -74,26 +61,4 @@ export interface ProviderCreateInput {
   timeout?: number;
   maxRetries?: number;
 }
-
 export type ProviderUpdateInput = Partial<Omit<ProviderCreateInput, 'id'>>;
-
-// —— KernelClient 接口（与 @liskin/protocol 的 KernelClient 同形）—— //
-
-export interface KernelClient {
-  createSession(opts?: { cwd?: string; system?: string }): Promise<SessionHandle>;
-  resumeSession(sessionId: string): Promise<SessionHandle>;
-  getRecord(sessionId: string): Promise<SessionRecord>;
-  closeSession(sessionId: string): Promise<void>;
-  listSessions(): Promise<SessionInfo[]>;
-  submit(op: {
-    sessionId: string;
-    content: string;
-    maxTurns?: number;
-  }): AsyncIterable<EventMsg>;
-  interrupt(sessionId: string): Promise<void>;
-  confirmTool(
-    sessionId: string,
-    callId: string,
-    decision: 'approve' | 'deny',
-  ): Promise<void>;
-}
