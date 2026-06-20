@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
-// —— Tool 相关类型（协议基础，无依赖）—— //
+// —— Tool 基础类型 —— //
 
 export const ToolCallSchema = z.object({
-  args: z.unknown(),
+  args: z.record(z.unknown()).default({}),
   id: z.string(),
   name: z.string(),
 });
@@ -16,8 +16,9 @@ export const ToolResultSchema = z.object({
 });
 export type ToolResult = z.infer<typeof ToolResultSchema>;
 
-export interface ToolDefinition {
-  name: string;
-  description: string;
-  parameters: Record<string, unknown>;
-}
+export const ToolDefinitionSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  parameters: z.record(z.unknown()),
+});
+export type ToolDefinition = z.infer<typeof ToolDefinitionSchema>;

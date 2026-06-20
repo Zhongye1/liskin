@@ -24,6 +24,7 @@
     "@hono/node-server": "^2.0.5",
     "@liskin/core": "workspace:^",
     "@liskin/llm": "workspace:^",
+    "@liskin/protocol": "workspace:^",
     "@liskin/tools": "workspace:^",
     "better-sqlite3": "^12.11.1",
     "hono": "^4.12.25",

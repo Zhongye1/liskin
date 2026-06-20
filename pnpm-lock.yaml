@@ -114,6 +114,9 @@ importers:
       '@liskin/llm':
         specifier: workspace:^
         version: link:../llm
+      '@liskin/protocol':
+        specifier: workspace:^
+        version: link:../protocol
       '@liskin/tools':
         specifier: workspace:^
         version: link:../tools

@@ -379,7 +379,7 @@ export function createApp(opts: CreateAppOptions) {
       // 工具调用产生的 assistant / tool 消息也要落到 session 里
       let assistantText = '';
       const newMsgs: Msg[] = [...messages];
-      const pendingToolCalls = new Map<string, { name: string; args: unknown }>();
+      const pendingToolCalls = new Map<string, { name: string; args: Record<string, unknown> }>();
 
       try {
         for await (const ev of runAgent({

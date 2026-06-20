@@ -1,9 +1,10 @@
-import type { EventMsg, InProcessKernelClient } from '@liskin/core';
+import type { InProcessKernelClient } from '@liskin/core';
+import { toSseFrame } from '@liskin/protocol';
 import type { Hono } from 'hono';
 import { stream } from 'hono/streaming';
 import { z } from 'zod';
 
-import { formatSSE, formatSSEComment } from './sse.js';
+import { formatSSEComment } from './sse.js';
 
 const CreateSessionSchema = z.object({
   cwd: z.string().optional(),
@@ -19,13 +20,6 @@ const ConfirmSchema = z.object({
   callId: z.string().min(1),
   decision: z.enum(['approve', 'deny']),
 });
-
-/**
- * 把 EventMsg 序列化成 SSE data 行。
- */
-function formatEventMsg(ev: EventMsg): string {
-  return formatSSE(ev as unknown as { kind: string });
-}
 
 /**
  * 在 Hono app 上挂载 sessions 相关路由，全部由 InProcessKernelClient 驱动。
@@ -87,6 +81,7 @@ export function mountSessionRoutes(
 
     return stream(c, async (s) => {
       await s.write(formatSSEComment('liskin session stream'));
+      let id = 0;
       try {
         for await (const ev of kernel.submit({
           type: 'UserTurn',
@@ -94,15 +89,17 @@ export function mountSessionRoutes(
           content: parsed.data.content,
           ...(parsed.data.maxTurns ? { maxTurns: parsed.data.maxTurns } : {}),
         })) {
-          await s.write(formatEventMsg(ev));
+          id += 1;
+          await s.write(toSseFrame(ev, id));
         }
       } catch (error) {
+        id += 1;
         await s.write(
-          formatEventMsg({
+          toSseFrame({
             type: 'Error',
             sessionId,
             error: { message: error instanceof Error ? error.message : String(error) },
-          }),
+          }, id),
         );
       }
     });

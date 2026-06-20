@@ -43,7 +43,7 @@ function* toolCallEventsFor(
     call: {
       id: pending.id,
       name: resolveOriginalName(pending.name, nameMap),
-      args: parsedArgs,
+      args: parsedArgs as Record<string, unknown>,
     },
   };
 }
