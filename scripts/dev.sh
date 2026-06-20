@@ -5,6 +5,7 @@
 #   ./scripts/dev.sh                  构建 + 启动 server + web（前台守护）
 #   ./scripts/dev.sh --no-build       跳过构建直接启动
 #   ./scripts/dev.sh exec "<prompt>"  用 agent exec 跑一次性任务（in-process，无 daemon）
+#   ./scripts/dev.sh chat             启动交互式 REPL（in-process，无 daemon）
 #   ./scripts/dev.sh watch            并行 tsup watch（core/tools/llm/server/client）
 #   ./scripts/dev.sh stop             停掉本地 agent + web
 #   ./scripts/dev.sh logs             tail 滚动看日志
@@ -217,6 +218,81 @@ cmd_exec() {
     "$prompt"
 }
 
+# —— agent chat：交互式 REPL，in-process，无 daemon ——
+# 用法：./scripts/dev.sh chat [--model <model>] [--cwd <path>] [--confirm auto|ask|deny] [--no-save] [--resume <id>]
+cmd_chat() {
+  # 先加载 .env，再解析参数默认值——否则 local 变量在 load_env 前就求值了
+  load_env
+  resolve_llm_config
+
+  local cwd="$ROOT"
+  local model="${LISKIN_MODEL:-opensource/glm5.2}"
+  local confirm="ask"
+  local no_save=""
+  local resume=""
+  local system=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --cwd)
+        cwd="$2"
+        shift 2
+        ;;
+      --model)
+        model="$2"
+        shift 2
+        ;;
+      --confirm)
+        confirm="$2"
+        shift 2
+        ;;
+      --no-save)
+        no_save="--no-save"
+        shift
+        ;;
+      --resume)
+        resume="--resume $2"
+        shift 2
+        ;;
+      --system)
+        system="--system $2"
+        shift 2
+        ;;
+      *)
+        warn "chat 忽略未知参数：$1"
+        shift
+        ;;
+    esac
+  done
+
+  if [[ -z "$OPENAI_API_KEY" ]]; then
+    err "缺少 OPENAI_API_KEY：请在 .env 或环境变量里设置"
+    exit 1
+  fi
+
+  # 确保 client 已构建
+  if [[ ! -f "$ROOT/client/dist/cli.js" ]]; then
+    log "client 未构建，先构建"
+    pnpm --filter @liskin/client run build >/dev/null
+  fi
+
+  echo "$(c_cyan '▸') model  : $model @ $OPENAI_BASE_URL"
+  echo "$(c_cyan '▸') cwd    : $cwd"
+  echo "$(c_cyan '▸') confirm: $confirm"
+  echo
+
+  cd "$cwd"
+  OPENAI_API_KEY="$OPENAI_API_KEY" \
+  node "$ROOT/client/dist/cli.js" chat \
+    --model "$model" \
+    --base-url "$OPENAI_BASE_URL" \
+    --cwd "$cwd" \
+    --confirm "$confirm" \
+    $no_save \
+    $resume \
+    $system
+}
+
 # —— watch：并行 tsup watch，改代码自动重建 ——
 cmd_watch() {
   log "并行 tsup watch（core / tools / llm / server / client）"
@@ -233,6 +309,8 @@ $(c_cyan 'liskin 本地开发脚本')
   $(c_green './scripts/dev.sh --no-build')     跳过构建直接启动
   $(c_green './scripts/dev.sh exec "<prompt>"')  用 agent exec 跑一次性任务
   $(c_green './scripts/dev.sh exec "<prompt>" --cwd /tmp/task --max-turns 30')
+  $(c_green './scripts/dev.sh chat')            启动交互式 REPL（agent chat）
+  $(c_green './scripts/dev.sh chat --confirm auto --no-save')
   $(c_green './scripts/dev.sh watch')          并行 tsup watch（改代码自动重建）
   $(c_green './scripts/dev.sh stop')           停掉本地 agent + web
   $(c_green './scripts/dev.sh logs')           tail 滚动看日志
@@ -264,6 +342,10 @@ main() {
     exec)
       shift
       cmd_exec "$@"
+      ;;
+    chat)
+      shift
+      cmd_chat "$@"
       ;;
     watch)
       cmd_watch

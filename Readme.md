@@ -149,14 +149,14 @@ flowchart TB
     style L1 fill:#f1f5f9,stroke:#64748b,stroke-width:2px
 ```
 
-| 包                | 层  | 职责                                                                    |
-| ----------------- | --- | ----------------------------------------------------------------------- |
-| `packages/core`   | L1  | Agent 状态机、主循环、Op/EventMsg 协议、KernelClient 接口               |
-| `packages/tools`  | L2  | 工具注册 + 沙箱（路径白名单/危险命令拦截）、fs.read/fs.write/shell.exec |
-| `packages/llm`    | L3  | LLMProvider 接口 + OpenAI 兼容适配器（已验证 GLM5.2）                   |
-| `packages/server` | L4  | Hono daemon，HTTP/SSE + SQLite 持久化                                   |
-| `client/`         | L4  | CLI 入口：agent serve（daemon）、agent exec（headless 一次性任务）      |
-| `web/`            | L4  | React + Vite + Tailwind 前端（待重写为时间线渲染）                      |
+| 包                | 层  | 职责                                                                               |
+| ----------------- | --- | ---------------------------------------------------------------------------------- |
+| `packages/core`   | L1  | Agent 状态机、主循环、Op/EventMsg 协议、KernelClient 接口                          |
+| `packages/tools`  | L2  | 工具注册 + 沙箱（路径白名单/危险命令拦截）、fs.read/fs.write/shell.exec            |
+| `packages/llm`    | L3  | LLMProvider 接口 + OpenAI 兼容适配器（已验证 GLM5.2）                              |
+| `packages/server` | L4  | Hono daemon，HTTP/SSE + SQLite 持久化                                              |
+| `client/`         | L4  | CLI 入口：agent serve（daemon）、agent exec（headless）、agent chat（交互式 REPL） |
+| `web/`            | L4  | React + Vite + Tailwind 前端（待重写为时间线渲染）                                 |
 
 ---
 
@@ -218,7 +218,44 @@ cp .env.example .env
 
 `agent exec` 用 `InProcessKernelClient` 直连内核，auto 批准工具，实时渲染事件流到终端，跑完即退出。事件流包含 `Token`（流式文本）、`ToolCall`/`ToolProgress`/`ToolResult`（工具调用 + 实时 stdout/stderr）、`TurnEnd`（回合结束）。
 
-### 4) 启动全栈（agent serve + web）
+### 4) 交互式 REPL（agent chat，in-process，无 daemon）
+
+```bash
+# 最简启动（确认策略默认 ask）
+./scripts/dev.sh chat
+
+# 指定模型和自定义 system prompt
+./scripts/dev.sh chat --model gpt-4o --system "你是 Python 专家"
+
+# 关闭工具确认（全自动执行）
+./scripts/dev.sh chat --confirm auto
+
+# 不持久化（退出即丢会话）
+./scripts/dev.sh chat --no-save
+
+# 恢复之前保存的会话
+./scripts/dev.sh chat --resume <sessionId>
+
+# 使用第三方 API
+./scripts/dev.sh chat --base-url https://api.openrouter.ai/v1 --model anthropic/claude-sonnet-4
+```
+
+`agent chat` 同样用 `InProcessKernelClient` 直连内核，与 `exec` 共享同一套渲染函数。核心差异：
+
+- **多轮对话**：readline REPL 循环，持续交互直到 `/exit`
+- **工具确认**：默认 `ask`，终端内联 `[y/n]` 问询（可用 `--confirm auto` 关闭）
+- **持久化**：默认存到 `~/.liskin/chat-sessions.sqlite`，`--resume` 恢复
+- **中断**：Ctrl-C 中断当前 turn 回到 prompt（不同于 exec 直接退出）
+
+REPL 内置命令：
+
+| 命令        | 作用             |
+| ----------- | ---------------- |
+| `/exit`     | 退出 REPL        |
+| `/help`     | 打印帮助信息     |
+| `/sessions` | 列出已保存的会话 |
+
+### 5) 启动全栈（agent serve + web）
 
 ```bash
 ./scripts/dev.sh          # 构建 + 启动 server(8787) + web(5173)
@@ -286,9 +323,9 @@ Phase 1 价值最大的一项。接入 Model Context Protocol，让 agent 能消
 
 让 agent 读取并遵守项目根目录的 `AGENTS.md` 约定文件。内容按层级组织：根目录放全局规范（架构、编码规范、Agent 路由决策树），业务目录放模块知识。记忆文件只描述"在哪查、怎么查"，不存易变数据。
 
-### 5. 终端 UI
+### 5. 终端 UI 增强
 
-当前 CLI 只有 `agent exec` 的一次性任务模式。补充交互式 REPL，可选 Ink（React）或 Bubble Tea（Go）实现。Core/UI 已经解耦，可并行推进。
+`agent chat` 交互式 REPL 已交付（Phase 1，基于 Node readline 原生实现，零新依赖）。后续增强方向：ANSI 光标控制（流式输出时隐藏光标、spinner 动画）、输入历史（readline history 持久化）、多行输入（粘贴代码块）。不引入 Ink/React 等重型 TUI 框架，保持 CLI 轻量。
 
 ### 6. Harness 框架
 
