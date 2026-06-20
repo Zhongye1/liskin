@@ -770,22 +770,22 @@ async function* runTurn(input: Message, ctx: LoopContext): AsyncGenerator<AgentE
 
 逐项验证「在哪些扩展场景下，Loop 完全不需要改」：
 
-| 扩展场景                      | 改动范围                                       | Loop 是否改        |
-| ----------------------------- | ---------------------------------------------- | ------------------ |
-| 加 Anthropic                  | 新增 `AnthropicProvider` + 注册                | ❌                 |
-| 加 Qwen / DeepSeek | 新增对应 Provider                              | ❌                 |
-| 接 MCP server                 | 注册 `McpToolSource`                           | ❌                 |
-| 接 skill 系统                 | 注册 `SkillToolSource`                         | ❌                 |
-| 加 reasoning 模型支持         | `ContentBlock` 已含 `'thinking'`，UI 处理即可  | ❌                 |
-| 加多模态 image **输入**       | `ContentBlock` 已含 `'image'`，Provider 翻译   | ❌                 |
-| 加多模态 image **输出**       | 工具/Provider 返回 image block 即可            | ❌                 |
-| 加 prompt caching             | Provider 内部用 `extra` 字段透传               | ❌                 |
-| 加重试 / 降级 / 灰度          | 新增 `RetryProvider` / `FallbackProvider` 包装 | ❌                 |
-| 接后端网关                    | 新增 `GatewayProvider`（实质是 HTTP client）   | ❌                 |
-| 录制/回放调试                 | 新增 `RecordReplayProvider` 装饰器             | ❌                 |
-| 把另一个 Agent 当工具         | 把 sub-Agent 包成 `ToolSource`                 | ❌                 |
-| 增加 audio block              | 新增 `ContentBlock` variant                    | ❌（但 UI 要适配） |
-| 工具二次确认（写盘/shell）    | 走 `ToolContext.confirm`                       | ❌                 |
+| 扩展场景                   | 改动范围                                       | Loop 是否改        |
+| -------------------------- | ---------------------------------------------- | ------------------ |
+| 加 Anthropic               | 新增 `AnthropicProvider` + 注册                | ❌                 |
+| 加 Qwen / DeepSeek         | 新增对应 Provider                              | ❌                 |
+| 接 MCP server              | 注册 `McpToolSource`                           | ❌                 |
+| 接 skill 系统              | 注册 `SkillToolSource`                         | ❌                 |
+| 加 reasoning 模型支持      | `ContentBlock` 已含 `'thinking'`，UI 处理即可  | ❌                 |
+| 加多模态 image **输入**    | `ContentBlock` 已含 `'image'`，Provider 翻译   | ❌                 |
+| 加多模态 image **输出**    | 工具/Provider 返回 image block 即可            | ❌                 |
+| 加 prompt caching          | Provider 内部用 `extra` 字段透传               | ❌                 |
+| 加重试 / 降级 / 灰度       | 新增 `RetryProvider` / `FallbackProvider` 包装 | ❌                 |
+| 接后端网关                 | 新增 `GatewayProvider`（实质是 HTTP client）   | ❌                 |
+| 录制/回放调试              | 新增 `RecordReplayProvider` 装饰器             | ❌                 |
+| 把另一个 Agent 当工具      | 把 sub-Agent 包成 `ToolSource`                 | ❌                 |
+| 增加 audio block           | 新增 `ContentBlock` variant                    | ❌（但 UI 要适配） |
+| 工具二次确认（写盘/shell） | 走 `ToolContext.confirm`                       | ❌                 |
 
 每一条都意味着「这套设计今天的克制为未来某个真实需求买了单」。
 

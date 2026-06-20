@@ -11,6 +11,14 @@ import { InMemoryStore, InProcessKernelClient, type EventMsg } from '@liskin/cor
 import { createProvider } from '@liskin/llm';
 import { ToolRegistry } from '@liskin/tools';
 
+import {
+  writeToken,
+  writeToolCall,
+  writeToolProgress,
+  writeToolResult,
+  writeError,
+} from './render.js';
+
 export interface ExecOptions {
   apiKey: string;
   baseURL?: string;
@@ -32,6 +40,7 @@ export interface ExecResult {
  * 返回最终 TurnEnd 的 reason。
  */
 export async function runExec(prompt: string, opts: ExecOptions): Promise<ExecResult> {
+  // 装配三个 Port 实现
   const llm = createProvider({
     id: 'exec',
     name: 'exec',
@@ -75,28 +84,26 @@ export async function runExec(prompt: string, opts: ExecOptions): Promise<ExecRe
   return { ok, turnEndReason: lastReason };
 }
 
-/** 把单个 EventMsg 渲染成终端输出，返回当前 turn 状态 reason。 */
+/** 把单个 EventMsg 渲染成终端输出，返回当前 turn 结束原因。 */
 function render(ev: EventMsg, prevReason: string): string {
   switch (ev.type) {
     case 'TurnStart': {
       return prevReason;
     }
     case 'Token': {
-      process.stdout.write(ev.text);
+      writeToken(ev.text);
       return prevReason;
     }
     case 'ToolCall': {
-      process.stdout.write(`\n\u001B[36m▸ ${ev.call.name}\u001B[0m ${formatArgs(ev.call.args)}\n`);
+      writeToolCall(ev.call);
       return prevReason;
     }
     case 'ToolProgress': {
-      process.stdout.write(ev.chunk);
+      writeToolProgress(ev.chunk);
       return prevReason;
     }
     case 'ToolResult': {
-      process.stdout.write(
-        `\u001B[${ev.result.ok ? '32' : '31'}m✓\u001B[0m ${truncate(ev.result.content)}\n`,
-      );
+      writeToolResult(ev.result);
       return prevReason;
     }
     case 'ToolConfirmRequired': {
@@ -107,34 +114,11 @@ function render(ev: EventMsg, prevReason: string): string {
       return ev.reason;
     }
     case 'Error': {
-      process.stderr.write(`\n\u001B[31m✗ ${ev.error.message}\u001B[0m\n`);
+      writeError(ev.error.message);
       return 'error';
     }
     default: {
       return prevReason;
     }
   }
-}
-
-function formatArgs(args: unknown): string {
-  if (typeof args !== 'object' || args === null) {
-    return '';
-  }
-  const obj = args as Record<string, unknown>;
-  if (typeof obj.cmd === 'string') {
-    return `$ ${obj.cmd}`;
-  }
-  if (typeof obj.path === 'string') {
-    return obj.path;
-  }
-  try {
-    return JSON.stringify(args);
-  } catch {
-    return '';
-  }
-}
-
-function truncate(text: string, max = 500): string {
-  const one = text.replaceAll('\n', ' ').trim();
-  return one.length > max ? `${one.slice(0, max)}…` : one;
 }
