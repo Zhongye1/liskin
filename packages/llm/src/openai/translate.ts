@@ -12,8 +12,8 @@ import type {
  */
 export function sanitizeToolName(name: string): string {
   return name
-    .replaceAll(/[^a-zA-Z0-9_-]/g, '_')
-    .replaceAll(/_+/g, '_')
+    .replaceAll(/[^a-zA-Z0-9_-]/gu, '_')
+    .replaceAll(/_+/gu, '_')
     .slice(0, 64);
 }
 
@@ -25,7 +25,9 @@ export type ToolNameMap = Map<string, string>;
  * 用于 tool_call 响应从 sanitized 名还原为 ToolRegistry 能识别的原名。
  */
 export function resolveOriginalName(sanitized: string, map?: ToolNameMap): string {
-  if (!map || map.size === 0) {return sanitized;}
+  if (!map || map.size === 0) {
+    return sanitized;
+  }
   return map.get(sanitized) ?? sanitized;
 }
 

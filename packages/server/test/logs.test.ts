@@ -82,8 +82,7 @@ describe('server /v1/logs/stream', () => {
   it('回放 ring buffer：订阅时返回已经存在的 entry', async () => {
     const logBus = new LogBus();
     // push(level, msg) 是单条语义：每条日志独立 push，level/msg 一一对应。
-    logBus.push('info', 'first hello');
-    logBus.push('warn', 'second warn');
+    logBus.push('info', 'first hello', 'warn', 'second warn');
 
     const app = createApp({
       llm: new ScriptedLLM(),
@@ -118,8 +117,7 @@ describe('server /v1/logs/stream', () => {
 
     // 等响应头落定后再 push
     setTimeout(() => {
-      logBus.push('info', 'late breaking news');
-      logBus.push('error', 'boom');
+      logBus.push('info', 'late breaking news', 'error', 'boom');
     }, 30);
 
     const body = await readSomeSSE(res, 'boom');
