@@ -24,6 +24,9 @@ PORT_SERVER="${PORT_SERVER:-8787}"
 PORT_WEB_PRIMARY="${PORT_WEB_PRIMARY:-5173}"
 PORT_WEB_FALLBACK="${PORT_WEB_FALLBACK:-5174}"
 
+# 抑制 Node 22 的 punycode 弃用警告（来自内置 url 模块的内部引用，非项目代码问题）
+export NODE_OPTIONS='--no-deprecation'
+
 mkdir -p "$LOG_DIR"
 
 c_red()    { printf '\033[31m%s\033[0m' "$1"; }
