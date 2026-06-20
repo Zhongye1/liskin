@@ -1,82 +1,30 @@
-// 模型 Provider 配置（多服务商）：走 Vite dev 代理到本地 agent 服务。
-// chat 流式逻辑已迁至 kernel/HttpSseKernelClient，这里只管 provider CRUD。
-const BASE = '/api/v1/providers';
+/**
+ * Provider CRUD：全部走 api/http.ts 的 axios 实例。
+ * 原文件的手写 fetch 已迁移至 api/http.ts，此处仅做类型适配 re-export。
+ */
+import { providers as api } from '../api/Http_Req/http';
+import type {
+  ProviderCreateInput,
+  ProviderUpdateInput,
+  ProviderView,
+} from '../api/types/types';
 
-export interface ProviderConfigView {
-  id: string;
-  name: string;
-  protocol: string;
-  baseURL?: string;
-  model: string;
-  apiKey: string; // 服务端返回的是已掩码字符串
-  organization?: string;
-  timeout?: number;
-  maxRetries?: number;
-  isActive: boolean;
-  source: 'env' | 'user';
-}
+export type { ProviderCreateInput, ProviderUpdateInput, ProviderView };
 
-export interface ProviderCreateInput {
-  id: string;
-  name: string;
-  protocol: string;
-  baseURL?: string;
-  model: string;
-  apiKey: string;
-  organization?: string;
-  timeout?: number;
-  maxRetries?: number;
-}
+export const listProviders = (): Promise<ProviderView[]> => api.list();
 
-export type ProviderUpdateInput = Partial<Omit<ProviderCreateInput, 'id'>>;
-
-async function jsonOrThrow<T>(res: Response): Promise<T> {
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`${res.status}: ${text || res.statusText}`);
-  }
-  return (await res.json()) as T;
-}
-
-export async function listProviders(): Promise<ProviderConfigView[]> {
-  const res = await fetch(BASE);
-  return jsonOrThrow<ProviderConfigView[]>(res);
-}
-
-export async function createProvider(
+export const createProvider = (
   input: ProviderCreateInput,
-): Promise<ProviderConfigView> {
-  const res = await fetch(BASE, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(input),
-  });
-  return jsonOrThrow<ProviderConfigView>(res);
-}
+): Promise<ProviderView> =>
+  api.create(input as unknown as Record<string, unknown>);
 
-export async function updateProvider(
+export const updateProvider = (
   id: string,
   patch: ProviderUpdateInput,
-): Promise<ProviderConfigView> {
-  const res = await fetch(`${BASE}/${encodeURIComponent(id)}`, {
-    method: 'PUT',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(patch),
-  });
-  return jsonOrThrow<ProviderConfigView>(res);
-}
+): Promise<ProviderView> =>
+  api.update(id, patch as unknown as Record<string, unknown>);
 
-export async function deleteProvider(id: string): Promise<void> {
-  const res = await fetch(`${BASE}/${encodeURIComponent(id)}`, { method: 'DELETE' });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`${res.status}: ${text || res.statusText}`);
-  }
-}
+export const deleteProvider = (id: string) => api.delete(id);
 
-export async function activateProvider(id: string): Promise<ProviderConfigView> {
-  const res = await fetch(`${BASE}/${encodeURIComponent(id)}/activate`, {
-    method: 'POST',
-  });
-  return jsonOrThrow<ProviderConfigView>(res);
-}
+export const activateProvider = (id: string): Promise<ProviderView> =>
+  api.activate(id);

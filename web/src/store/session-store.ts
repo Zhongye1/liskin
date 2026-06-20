@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import type { EventMsg, NormalizedError, SessionInfo, ToolCall } from '@liskin/core';
 
-import { HttpSseKernelClient } from '../kernel/http-sse';
-import type { KernelClient } from '../kernel/client';
+import { HttpSseKernelClient } from '../api/client';
+import type { KernelClient } from '../api/types/types';
 import { applyEvent, messagesToTurns, newTurn, type Turn } from '../kernel/events';
 
 type Status = 'idle' | 'streaming' | 'awaiting_confirm' | 'error';
