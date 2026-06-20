@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { EventMsg, ToolCall, ToolResult } from '@liskin/core';
 
- import { applyEvent, messagesToTurns, newTurn } from '../src/kernel/events';
+ import { applyEvent, messagesToTurns, newTurn } from '../src/features/conversation/lib/events';
 
 const SESSION = 'sess-1';
 const TURN = 'turn-1';

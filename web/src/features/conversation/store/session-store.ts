@@ -2,41 +2,43 @@ import { create } from 'zustand';
 import type { EventMsg, NormalizedError, SessionInfo, ToolCall } from '@liskin/core';
 import type { KernelClient } from '@liskin/protocol';
 
-import { HttpSseKernelClient } from '../api/client';
-import { applyEvent, messagesToTurns, newTurn, type Turn } from '../kernel/events';
+import { HttpSseKernelClient } from '../../../api';
+import { applyEvent, messagesToTurns, newTurn, type Turn } from '../lib/events';
 
 type Status = 'idle' | 'streaming' | 'awaiting_confirm' | 'error';
 
 interface SessionState {
   sessions: SessionInfo[];
-  activeSessionId: string | null;
   turns: Turn[];
   status: Status;
   pendingConfirm: ToolCall | null;
   error: NormalizedError | null;
   draft: string;
 
-  // 动作
+  // 动作 —— sessionId 由调用方传入（来自 URL params），store 不再持有 activeSessionId
   init: () => Promise<void>;
   refreshSessions: () => Promise<void>;
-  newSession: (system?: string) => Promise<void>;
+  newSession: (system?: string) => Promise<string>;
   selectSession: (id: string) => Promise<void>;
   setDraft: (v: string) => void;
-  send: (content: string) => Promise<void>;
-  interrupt: () => Promise<void>;
-  approveTool: () => Promise<void>;
-  denyTool: () => Promise<void>;
+  send: (sessionId: string, content: string) => Promise<void>;
+  interrupt: (sessionId: string) => Promise<void>;
+  approveTool: (sessionId: string) => Promise<void>;
+  denyTool: (sessionId: string) => Promise<void>;
 }
 
 const kernel: KernelClient = new HttpSseKernelClient();
 
-// —— rAF 批量 flush：高频 Token 增量合并到每帧一次 set，避免逐 token 重渲染 —— //
-// 见 docs/architecture/web-frontend-design.md §Step 3.3。
-type SetFn = (partial: Partial<SessionState> | ((s: SessionState) => Partial<SessionState>)) => void;
+type SetFn = (
+  partial:
+    | Partial<SessionState>
+    | ((s: SessionState) => Partial<SessionState>),
+) => void;
+
+// —— rAF 批量 flush —— //
 const pendingTokens = new Map<string, string[]>();
 let flushScheduled = false;
 
-/** 把缓冲的 token 批量折进对应 turn，清空缓冲。 */
 function flushTokens(set: SetFn): void {
   flushScheduled = false;
   if (pendingTokens.size === 0) {return;}
@@ -61,14 +63,12 @@ function scheduleFlush(set: SetFn): void {
   if (typeof requestAnimationFrame === 'function') {
     requestAnimationFrame(() => flushTokens(set));
   } else {
-    // 测试/SSR 无 rAF：下一轮宏任务兜底
     setTimeout(() => flushTokens(set), 16);
   }
 }
 
 export const useSessionStore = create<SessionState>((set, get) => ({
   sessions: [],
-  activeSessionId: null,
   turns: [],
   status: 'idle',
   pendingConfirm: null,
@@ -77,14 +77,6 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   init: async () => {
     await get().refreshSessions();
-    const list = get().sessions;
-    const target = list[0]?.id;
-    // eslint-disable-next-line unicorn/prefer-ternary -- 含 await，三元可读性差
-    if (target) {
-      await get().selectSession(target);
-    } else {
-      await get().newSession();
-    }
   },
 
   refreshSessions: async () => {
@@ -92,15 +84,20 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       const sessions = await kernel.listSessions();
       set({ sessions });
     } catch (error) {
-      set({ error: { message: error instanceof Error ? error.message : String(error) } });
+      set({
+        error: {
+          message: error instanceof Error ? error.message : String(error),
+        },
+      });
     }
   },
 
   newSession: async (system?: string) => {
     try {
-      const handle = await kernel.createSession(system ? { system } : undefined);
+      const handle = await kernel.createSession(
+        system ? { system } : undefined,
+      );
       set({
-        activeSessionId: handle.id,
         turns: [],
         status: 'idle',
         error: null,
@@ -108,30 +105,34 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         draft: '',
       });
       await get().refreshSessions();
+      return handle.id;
     } catch (error) {
-      set({ error: { message: error instanceof Error ? error.message : String(error) } });
+      set({
+        error: {
+          message: error instanceof Error ? error.message : String(error),
+        },
+      });
+      return '';
     }
   },
 
   selectSession: async (id) => {
-    // 切会话：拉取持久化消息并重建 Turn[]（历史回放，见 §Step 3.3）
-    set({ activeSessionId: id, turns: [], status: 'idle', error: null, pendingConfirm: null });
+    set({ turns: [], status: 'idle', error: null, pendingConfirm: null });
     try {
       const record = await kernel.getRecord(id);
-      // 仅当用户未在此期间切到别的会话时才回填
-      if (get().activeSessionId === id) {
-        // protocol.SessionRecord.messages 是 unknown[]，此处实际为 Msg[]
-        set({ turns: messagesToTurns(record.messages as Parameters<typeof messagesToTurns>[0]) });
-      }
+      set({ turns: messagesToTurns(record.messages as Parameters<typeof messagesToTurns>[0]) });
     } catch (error) {
-      set({ error: { message: error instanceof Error ? error.message : String(error) } });
+      set({
+        error: {
+          message: error instanceof Error ? error.message : String(error),
+        },
+      });
     }
   },
 
   setDraft: (v) => set({ draft: v }),
 
-  send: async (content) => {
-    const sessionId = get().activeSessionId;
+  send: async (sessionId, content) => {
     if (!sessionId || !content.trim()) {return;}
     if (get().status === 'streaming') {return;}
 
@@ -144,16 +145,21 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }));
 
     try {
-      for await (const ev of kernel.submit({ type: 'UserTurn', sessionId, content })) {
+      for await (const ev of kernel.submit({
+        type: 'UserTurn',
+        sessionId,
+        content,
+      })) {
         reduceEvent({ set, turnId: turn.id }, ev);
       }
-      // 流结束：强制 flush 残留 token，保证最后一帧不丢
       flushTokens(set);
     } catch (error) {
       flushTokens(set);
       set((s) => ({
         status: 'error',
-        error: { message: error instanceof Error ? error.message : String(error) },
+        error: {
+          message: error instanceof Error ? error.message : String(error),
+        },
         turns: s.turns.map((t) =>
           t.id === turn.id ? { ...t, status: 'error' as const } : t,
         ),
@@ -161,35 +167,32 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
   },
 
-  interrupt: async () => {
-    const sessionId = get().activeSessionId;
+  interrupt: async (sessionId) => {
     if (!sessionId) {return;}
     flushTokens(set);
     await kernel.interrupt(sessionId);
     set({ status: 'idle' });
   },
 
-  approveTool: async () => {
-    const { activeSessionId, pendingConfirm } = get();
-    if (!activeSessionId || !pendingConfirm) {return;}
+  approveTool: async (sessionId) => {
+    const { pendingConfirm } = get();
+    if (!sessionId || !pendingConfirm) {return;}
     flushTokens(set);
     set({ pendingConfirm: null, status: 'streaming' });
-    await kernel.confirmTool(activeSessionId, pendingConfirm.id, 'approve');
+    await kernel.confirmTool(sessionId, pendingConfirm.id, 'approve');
   },
 
-  denyTool: async () => {
-    const { activeSessionId, pendingConfirm } = get();
-    if (!activeSessionId || !pendingConfirm) {return;}
+  denyTool: async (sessionId) => {
+    const { pendingConfirm } = get();
+    if (!sessionId || !pendingConfirm) {return;}
     flushTokens(set);
     set({ pendingConfirm: null, status: 'streaming' });
-    await kernel.confirmTool(activeSessionId, pendingConfirm.id, 'deny');
+    await kernel.confirmTool(sessionId, pendingConfirm.id, 'deny');
   },
 }));
 
-/**
- * 把 EventMsg 折进对应 turn，并更新状态机。
- * Token 走 rAF 批量缓冲（高频增量合并），其余事件先 flush 缓冲再立即处理。
- */
+// —— EventMsg → Turn reducer —— //
+
 interface ReduceCtx {
   set: SetFn;
   turnId: string;
@@ -198,7 +201,6 @@ interface ReduceCtx {
 function reduceEvent(ctx: ReduceCtx, ev: EventMsg): void {
   const { set, turnId } = ctx;
 
-  // Token：缓冲，等 rAF 批量 flush
   if (ev.type === 'Token') {
     const arr = pendingTokens.get(turnId);
     if (arr) {
@@ -210,10 +212,8 @@ function reduceEvent(ctx: ReduceCtx, ev: EventMsg): void {
     return;
   }
 
-  // 非 Token 事件：先 flush 残留 token，保证顺序（token 在前）
   flushTokens(set);
 
-  // 把事件折进对应 turn 的 steps（applyEvent 同时更新 turn.status）
   set((s) => ({
     turns: s.turns.map((t) => {
       if (t.id !== turnId) {return t;}
@@ -223,7 +223,6 @@ function reduceEvent(ctx: ReduceCtx, ev: EventMsg): void {
     }),
   }));
 
-  // 顶层状态机推进
   if (ev.type === 'ToolConfirmRequired') {
     set({ status: 'awaiting_confirm', pendingConfirm: ev.call });
   } else if (ev.type === 'TurnEnd') {

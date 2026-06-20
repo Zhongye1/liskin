@@ -1,7 +1,7 @@
-import type { Step } from '../../kernel/events';
-import { useSessionStore } from '../../store/session-store';
-import { formatToolArgs } from '../../lib/tool-views';
-import { Markdown } from '../Markdown';
+import type { Step } from '../lib/events';
+import { useSessionStore } from '../store/session-store';
+import { formatToolArgs } from '../../../shared/lib/tool-views';
+import { Markdown } from '../../../shared/components/Markdown';
 
 export function TextStep({ step }: { step: Extract<Step, { kind: 'text' }> }) {
   const text = step.parts.join('');

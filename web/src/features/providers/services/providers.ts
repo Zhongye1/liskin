@@ -2,12 +2,12 @@
  * Provider CRUD：全部走 api/http.ts 的 axios 实例。
  * 原文件的手写 fetch 已迁移至 api/http.ts，此处仅做类型适配 re-export。
  */
-import { providers as api } from '../api/Http_Req/http';
+import { providers as api } from "../../../api";
 import type {
   ProviderCreateInput,
   ProviderUpdateInput,
   ProviderView,
-} from '../api/types/types';
+} from '../../../api/types/types';
 
 export type { ProviderCreateInput, ProviderUpdateInput, ProviderView };
 

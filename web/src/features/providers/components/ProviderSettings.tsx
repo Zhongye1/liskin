@@ -2,14 +2,14 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { Button } from './ui/button';
+import { Button } from '../../../shared/ui/button';
 import {
   activateProvider,
   createProvider,
   deleteProvider,
   listProviders,
   updateProvider,
-  type ProviderConfigView,
+  type ProviderView,
   type ProviderCreateInput,
   type ProviderUpdateInput,
  } from '../services/providers';
@@ -36,7 +36,7 @@ const EMPTY_FORM: DraftForm = {
   maxRetries: '',
 };
 
-function rowToForm(row: ProviderConfigView): DraftForm {
+function rowToForm(row: ProviderView): DraftForm {
   return {
     id: row.id,
     name: row.name,
@@ -79,7 +79,7 @@ function buildPayload(form: DraftForm, isCreate: boolean): ProviderCreateInput |
 }
 
 export function ProviderSettings() {
-  const [list, setList] = useState<ProviderConfigView[]>([]);
+  const [list, setList] = useState<ProviderView[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -104,7 +104,7 @@ export function ProviderSettings() {
 
   const isEditing = editingId !== null;
 
-  const startEdit = (row: ProviderConfigView) => {
+  const startEdit = (row: ProviderView) => {
     setEditingId(row.id);
     setForm(rowToForm(row));
   };

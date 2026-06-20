@@ -1,4 +1,4 @@
-import type { Turn } from '../../kernel/events';
+import type { Turn } from '../lib/events';
 import { ToolStep, TextStep, ConfirmCard } from './Steps';
 
 export function TurnItem({ turn }: { turn: Turn }) {
