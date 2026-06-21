@@ -12,10 +12,10 @@ import type {
   ToolResult,
 } from '@liskin/protocol';
 
-import type { LLMPort } from '../ports/llm-port.js';
-import type { StorePort } from '../ports/store-port.js';
-import type { ToolPort, ToolInvokeOptions } from '../ports/tool-port.js';
-import type { HarnessPort } from '../harness/harness-port.js';
+import type { LLMPort } from '../ports';
+import type { StorePort } from '../ports';
+import type { ToolPort, ToolInvokeOptions } from '../ports';
+import type { HarnessPort } from '../harness';
 import type { Msg } from '../types/messages.js';
 import type { AgentEvent } from '../types/events.js';
 import { runAgent } from '../agent/loop.js';
@@ -63,19 +63,95 @@ interface HandleEventCtx {
 }
 
 /**
- * 进程内 KernelClient：把 runAgent 包装成「服务」。
+ * 进程内 KernelClient — 所有 in-process 场景的集中入口。
  *
- * 关键设计——用 ConfirmingToolPort + AsyncQueue 合并确认语义：
- * - runAgent 的事件流（经 ConfirmingToolPort 翻译）push 进 AsyncQueue
- * - 遇到 ConfirmRequiredError 时，先 push ToolConfirmRequired，再 await deferred
- * - confirmTool(approve) → deferred resolve('approve') → ToolPort 带
- *   confirmedCallId 重跑同一 call，事件继续 push
- * - confirmTool(deny) → 回灌 ok=false 的 tool_result，续跑
+ * ## 定位
  *
- * 这样单条 submit(UserTurn) 的 AsyncIterable<EventMsg> 在确认期间自然暂停，
- * 既不需要重新 runAgent（无 token 重生成），也不需要假 user 消息。
+ * 这是 KernelClient 协议接口的 in-process 实现。CLI（chat/exec）和测试
+ * 通过它直连内核，无需 HTTP/SSE transport。对外暴露统一的 KernelClient
+ * 接口（createSession / submit / confirmTool / interrupt），对内组装
+ * LLMPort + ToolPort + StorePort + HarnessPort，驱动 runAgent。
  *
- * 见 docs/architecture/kernel-client-protocol.md §3.4 / §4.3。
+ * ## 一次 submit() 的完整流程
+ *
+ *   submit({sessionId, content}):
+ *     │
+ *     ├─ 1. store.loadSession(sessionId) → messages（加载历史）
+ *     ├─ 2. messages.push({role: 'user', content})（追加用户消息）
+ *     ├─ 3. store.saveSession({...record, messages, updatedAt})（先落 user turn）
+ *     ├─ 4. new AsyncQueue<EventMsg>() + new AbortController()
+ *     │
+ *     ├─ 5. driveTurn({messages, queue, signal, ...})  ← 异步启动
+ *     │      │
+ *     │      └─ for await (ev of runAgent({
+ *     │            llm: this.llm,              // 原始 LLMPort
+ *     │            tools: this.wrapToolsForConfirm({...}),  // ★ 包了一层
+ *     │            harness: this.harness,
+ *     │            initialMessages: messages,
+ *     │            confirmedCallIds,
+ *     │            maxTurns, signal
+ *     │          })) {
+ *     │            handleEvent(ev)  → 翻译 AgentEvent → EventMsg → queue.push()
+ *     │          }
+ *     │
+ *     └─ 6. yield TurnStart; for await (ev of queue) { yield ev }
+ *          // 上层拿到 AsyncIterable<EventMsg>，流式消费
+ *
+ * ## 确认流程 — wrapToolsForConfirm + AsyncQueue + Deferred
+ *
+ *   这是整个设计中"流自然暂停"的关键。runAgent 本身只能处理最原始的
+ *   ConfirmRequiredError 异常（抛 → return）。InProcessKernelClient 在
+ *   ToolPort 外包了一层，把异常翻译成"push 事件 + await Deferred"：
+ *
+ *     runAgent                    wrapToolsForConfirm              AsyncQueue
+ *       │                              │                              │
+ *       ├─ invoke(call) ──────────────→│ inner.invoke(call)           │
+ *       │                              │   ↓ ConfirmRequiredError    │
+ *       │                              │ catch:                       │
+ *       │                              │   queue.push(               │
+ *       │                              │     ToolConfirmRequired) ───→ 上层消费
+ *       │                              │   deferred = new Deferred()  │
+ *       │                              │   await deferred.promise ← 阻塞在这
+ *       │                              │       ↑                     │
+ *       │                              │  confirmTool('approve') ────┘
+ *       │                              │   → deferred.resolve()
+ *       │                              │   → inner.invoke(call, {confirmedCallId})
+ *       │  ← result ───────────────────┤
+ *       │                              │
+ *       │  继续下一轮 ─────────────────→                              │
+ *
+ *   这样单条 submit() 的 AsyncIterable<EventMsg> 在确认期间自然暂停：
+ *   - 不需要重新调用 runAgent（无 token 重生成）
+ *   - 不需要在 messages 里插入假 user 消息（<continue:id> 等 hack）
+ *   - deny 时 wrapToolsForConfirm 直接返回 ok=false 的 ToolResult，runAgent 自然处理
+ *
+ * ## 事件翻译 — handleEvent
+ *
+ *   AgentEvent (内核事件)       →  EventMsg (协议事件)
+ *   ─────────────────────────────────────────────────
+ *   token                      →  Token（逐字）
+ *   tool_call                  →  ToolCall（展示意图）
+ *   tool_progress              →  ToolProgress（实时输出）
+ *   tool_result                →  ToolResult + flush assistant
+ *   tool_confirm_required      →  ToolConfirmRequired（暂停）
+ *   done(reason)               →  TurnEnd（reason 映射）
+ *   error                      →  Error + TurnEnd('error')
+ *
+ * ## 内部类型
+ *
+ *   TurnAccumulator  — 单次 Turn 内累积的 assistant 文本 + toolCalls。
+ *                      文本和 tool_call 在流式过程中分别到来，需要先缓存，
+ *                      tool_result 出现时一次性 flush 成一条 assistant 消息。
+ *
+ *   PendingConfirm   — 活跃的确认请求。sessionId → {turnId, deferred}。
+ *                      confirmTool 通过 sessionId 找到 deferred 并 resolve。
+ *
+ * ## 生命周期
+ *
+ *   - createSession: 生成 id → store.saveSession → 返回 SessionHandle
+ *   - resumeSession: store.loadSession → 返回 SessionHandle（含 isNew: false）
+ *   - closeSession:  interrupt + resolve pending confirm → store.deleteSession
+ *   - activeRuns:    Map<sessionId, AbortController> — 同一时刻一个 session 最多一个 run
  */
 export class InProcessKernelClient implements KernelClient {
   private readonly maxTurnsDefault: number;
