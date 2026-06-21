@@ -1,8 +1,82 @@
-import type { LLMPort } from '../ports/llm-port.js';
-import type { ToolPort } from '../ports/tool-port.js';
-import type { StorePort } from '../ports/store-port.js';
-import { ConfirmRequiredError } from '../ports/tool-port.js';
-import type { HarnessPort } from '../harness/harness-port.js';
+/**
+ * Agent 主循环 — 流式 ReAct Loop。
+ *
+ * ## 职责
+ *
+ * L1 内核的最内层。接收三个 Port 接口（LLMPort / ToolPort / StorePort）和
+ * 初始消息，产出 AsyncGenerator<AgentEvent>。不 import 任何具体实现，不感知
+ * 自己是 CLI 还是 Web 在调用。
+ *
+ * ## 输入
+ *
+ *   RunAgentOptions {
+ *     llm: LLMPort            // 流式聊天（由 llm 包实现）
+ *     tools: ToolPort          // 工具注册与调度（由 tools 包实现）
+ *     store?: StorePort        // 可选：会话持久化（由 server 包实现）
+ *     harness?: HarnessPort    // 可选：任务真相记录（当前 NoopHarness 占位）
+ *     initialMessages: Msg[]   // 启动消息（至少含 system + 第一条 user）
+ *     maxTurns?: number        // 防死循环上限，默认 16
+ *     confirmedCallIds?: string[] // 确认后重入：用户已批准的 tool_call id
+ *     signal?: AbortSignal     // 取消信号（Ctrl-C / 页面关闭）
+ *   }
+ *
+ * ## 输出
+ *
+ *   AsyncGenerator<AgentEvent> — 7 种事件：
+ *   - token                  → 逐字文本输出
+ *   - tool_call              → 模型想调工具（执行前先 yield）
+ *   - tool_progress          → 工具实时 stdout/stderr
+ *   - tool_result            → 工具执行结果
+ *   - tool_confirm_required  → 需要用户确认（暂停 run，等 confirmTool）
+ *   - done                   → completed / max_turns / cancelled
+ *   - error                  → 异常终止
+ *
+ * ## 状态推进
+ *
+ *     idle
+ *      │
+ *      ▼
+ *     streaming(LLM) ──→ 无 toolCall? ──→ done(completed)
+ *      │
+ *      └─→ 有 toolCall(s)
+ *            │
+ *            ├─ 成功 ──→ tool_result 回灌 messages ──→ 下一轮 streaming
+ *            ├─ ConfirmRequiredError ──→ tool_confirm_required ──→ return（暂停）
+ *            └─ 其他错误 ──→ error ──→ return
+ *
+ *     每轮开头检查 AbortSignal → done(cancelled)
+ *     达到 maxTurns          → done(max_turns)
+ *
+ * ## 不变量
+ *
+ *   1. tool_call 先 yield 再执行 — 透明展示模型意图
+ *   2. tool_result yield 后才回灌 messages，确保事件顺序一致
+ *   3. ConfirmRequiredError 不产生假 user 消息 — yield + return，由上层重入
+ *   4. 错误归一为 AgentEvent 后 return，不继续循环
+ *   5. 内核不 import @liskin/llm / @liskin/tools / @liskin/server
+ *
+ * ## 确认流程
+ *
+ *   runAgent 不处理确认 UI。遇到 ConfirmRequiredError 时 yield
+ *   tool_confirm_required 事件并 return。调用方（InProcessKernelClient）
+ *   在外部等待用户决策，然后带着 confirmedCallIds 再次调用 runAgent，
+ *   preflight 检测到 confirmedCallId 命中 → 用 confirmPolicy='auto' 跳过弹窗。
+ *
+ *   详见 packages/core/src/kernel/in-process.ts 的 wrapToolsForConfirm。
+ *
+ * ## invokeWithProgress
+ *
+ *   从主循环抽取的工具执行辅助函数。用 Promise + notify 唤醒机制在
+ *   draining progressQueue 和等待工具完成之间切换，避免忙等。
+ *   工具执行期间的实时 stdout/stderr 通过 onProgress 回调推送，
+ *   包装为 tool_progress 事件流式 yield。
+ */
+
+import type { LLMPort } from '../ports';
+import type { ToolPort } from '../ports';
+import type { StorePort } from '../ports';
+import { ConfirmRequiredError } from '../ports';
+import type { HarnessPort } from '../harness';
 import type { Msg, ToolCall, ToolResult } from '../types/messages.js';
 import type { AgentEvent } from '../types/events.js';
 
@@ -21,20 +95,22 @@ export interface RunAgentOptions {
 }
 
 /**
- * Agent 主循环：流式产出 AgentEvent。
+ * 主循环入口。输入/输出/状态机/不变量详见文件头注释。
  *
- * 状态推进概览：
- *   idle → streaming(LLM) → (没有 toolCall? done : awaiting_tool)
- *                         → 工具执行命中 ConfirmRequiredError → awaiting_user → return
- *                         → 工具执行成功 → 把 tool 结果回灌进 messages → 下一轮
- *
- * 关键不变量：
- *   - tool_call 事件必须在工具实际执行之前 yield（透明展示意图）
- *   - tool_result 在工具执行成功后 yield，并以 role:'tool' 消息回灌
- *   - 每轮开头检查 AbortSignal；中途取消 → done(cancelled)
- *   - 达到 maxTurns → done(max_turns)
- *   - LLM error 事件 → 转发为 agent error 后立即 return
- *   - ConfirmRequiredError → yield tool_confirm_required 并 return（暂停 run）
+ * 内部流程：
+ *   while (turn < maxTurns):
+ *     ├─ 调 LLMPort.chatStream() → 流式消费 LLMEvent
+ *     │   ├─ token       → yield AgentEvent('token')
+ *     │   ├─ tool_call   → 收集到 pendingToolCalls（先 yield 再执行）
+ *     │   ├─ error       → yield error + return
+ *     │   └─ done        → 结束本轮流式
+ *     ├─ 把 assistant 消息（含 toolCalls）push 进 messages
+ *     ├─ 没有 toolCall? → yield done('completed') + return
+ *     └─ 有 toolCall?   → 逐个 invokeWithProgress():
+ *         ├─ 流式产出 tool_progress（实时 stdout/stderr）
+ *         ├─ ConfirmRequiredError → yield tool_confirm_required + return
+ *         ├─ 其他错误 → yield error + return
+ *         └─ 成功 → yield tool_result + push tool 消息 → 下一轮
  */
 export async function* runAgent(opts: RunAgentOptions): AsyncGenerator<AgentEvent, void, void> {
   const { llm, tools, harness, initialMessages, maxTurns = 16, confirmedCallIds, signal } = opts;
