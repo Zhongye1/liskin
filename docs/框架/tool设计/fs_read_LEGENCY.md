@@ -924,3 +924,165 @@ Codex 接受这些代价,因为它的回报正好打在它的痛点上:
 一句话:**对。Codex 路线用更多 token、更大上下文占用、更高模型能力要求,换来无状态和写时对齐真相的鲁棒性。它适合"强模型 + 云端自主"的 Codex,但如果 Liskin 要兼容中小模型或在意成本,Claude 风格的行号/字符串 Edit(+fuzzy 兜底)更划算——或者走"行号定位 + 1 行上下文校验"的折中,两头的好处都占一点。**
 
 要我把这个折中的 Edit 方案(行号定位 + 轻量上下文校验 + fuzzy 兜底 + 失败重试提示)的具体协议和匹配逻辑写出来吗?
+Liskin 工具接口全链路
+
+三层接口 + 一个注册中心，依赖方向只向下：
+
+┌─────────────────────────────────────────────────────────────────┐
+│ @liskin/protocol (L1 — 纯粹类型，零依赖) │
+│─────────────────────────────────────────────────────────────────│
+│ ToolDefinition { name, description, parameters } │
+│ ToolCall { id, name, args } │
+│ ToolResult { toolCallId, ok, content } │
+│ │
+│ 这是 LLM 看到的工具形状。protocol 包不涉及任何执行逻辑。 │
+└─────────────────────────────────────────────────────────────────┘
+↑ import type ↑ import type
+│ │
+┌─────────┴──────────────────────┐ ┌──────────┴──────────────────┐
+│ @liskin/core (L1 — 端口契约) │ │ packages/tools (L2 — 实现) │
+│────────────────────────────────│ │─────────────────────────────│
+│ ToolPort { │ │ ToolImpl { │
+│ list(): ToolDefinition[] │ │ definition: ToolDef │
+│ invoke(call, opts): Result │ │ execute(args, ctx): str │
+│ } │ │ preflight?(call, ctx) │
+│ │ │ } │
+│ ConfirmRequiredError { │ │ │
+│ call: ToolCall │ │ ToolRegistry implements │
+│ } │ │ ToolPort { │
+│ │ │ register(impl) │
+│ ToolInvokeOptions { │ │ invoke(call) → ToolResult│
+│ confirmedCallId? │ │ } │
+│ onProgress? │ │ │
+│ } │ │ ToolExecContext { │
+└────────────────────────────────┘ │ cwd, confirmPolicy, │
+│ pathWhitelist, signal │
+
+                                    │                             │
+                                    │  ConfirmPolicy:             │
+                                    │    auto → 直接放行           │
+                                    │    ask  → 抛 ConfirmReqErr  │
+                                    │    deny → 抛 Error 拒绝     │
+                                    └─────────────────────────────┘
+
+一次工具调用的完整路径
+
+LLM 返回 tool_call: { id:"c1", name:"fs_read", args:{ path:"a.ts" } }
+│
+▼
+runAgent() — 内核主循环
+│ 调用 toolPort.invoke(tool_call)
+▼
+ToolRegistry.invoke(call, opts)
+│ ① 按 name 查找 ToolImpl
+│ ② 构建 ToolExecContext (cwd, confirmPolicy, whitelist, signal)
+│ ③ preflight(call, ctx)
+│ ├─ zod 校验入参
+│ ├─
+description: 'Edits a file...',
+parameters: { type: 'object', properties: { ... } },
+},
+preflight(call, ctx) { ... }, // ← 路径白名单 + 确认策略
+async execute(args, ctx) { ... }, // ← 实际逻辑，返回 string
+};
+
+// 注册到 ToolRegistry 即生效
+registry.register(fsEditTool);
+
+三个不变的约束：
+
+- 内核不感知工具底层：runAgent 只调 ToolPort.invoke()，不知道是 fs_read 还是 MCP 远程服务
+- preflight 统一做安全：路径白名单 + 确认策略全在 preflight 阶段，不散落在各工具的 execute 里
+- execute 返回 string：最简单的接口——入参 unknown（工具自己用 zod 校验），出参 string（成功就是正文，失败抛 Error，result.ok=false）
+
+```
+
+整条链路，六层转换：
+
+全链路追踪
+
+Layer 1: OpenAI API 流式响应 (SSE chunks)
+─────────────────────────────────────────
+data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_abc",
+      "function":{"name":"fs_read"}}]}}]}
+data: {"choices":[{"delta":{"tool_calls":[{"index":0,
+      "function":{"arguments":"{\"path\":"}}]}}]}
+data: {"choices":[{"delta":{"tool_calls":[{"index":0,
+      "function":{"arguments":"\"src/a.ts\"}"}}]}}]}
+data: {"choices":[{"finish_reason":"tool_calls"}]}
+      ↑ 分片下发, name 和 arguments 是分离的, arguments 是 JSON 字符串
+
+Layer 2: stream.ts — 累积 + JSON.parse + 反查原名
+─────────────────────────────────────────
+handleChoice() → 按 index 累积到 PendingToolCall:
+  pendingByIndex[0] = {
+    id: "call_abc",
+    name: "fs_read",          ← 从 SSE chunks 拼接
+    argsBuffer: '{"path":"src/a.ts"}'  ← 逐 chunk 拼
+  }
+
+finish_reason="tool_calls" → drainPending():
+  toolCallEventsFor():
+    JSON.parse(argsBuffer) → { path: "src/a.ts" }  ← 字符串→对象
+    resolveOriginalName("fs_read", nameMap) → "fs.read"  ← 还原原名
+    yield { kind: "tool_call", call: { id:"call_abc", name:"fs.read", args:{path:"src/a.ts"} } }
+
+Layer 3: loop.ts — runAgent 主循环
+─────────────────────────────────
+case 'tool_call':
+  pendingToolCalls.push(ev.call)
+  yield AgentEvent { kind: 'tool_call', call: {...} }  ← 透明展示, 先不执行
+
+LLM 结束 → 顺序执行每个 tool_call:
+  invokeWithProgress(call, tools, confirmed):
+    tools.invoke(call, { confirmedCallId?, onProgress })
+
+Layer 4: ToolRegistry.invoke()
+──────────────────────────────
+① 按 call.name("fs.read") 查找 ToolImpl
+② preflight(call, ctx)          ← 路径白名单 + 确认策略
+③ execute(call.args, ctx)       ← 实际逻辑 (fs.readFile / grep / ...)
+④ return { toolCallId:"call_abc", ok:true, content:"1: import ..." }
+
+Layer 5: loop.ts — 结果回灌
+───────────────────────────
+yield AgentEvent { kind: 'tool_result', result: { ok:true, content:"..." } }
+messages.push({
+  role: 'tool',
+  content: "1: import ...",
+  toolCallId: "call_abc"
+})
+
+Layer 6: InProcessKernelClient → EventMsg
+─────────────────────────────────────────
+handleEvent():
+  case 'tool_result':
+    flush assistant msg (含 toolCalls) → messages
+    flush tool msg → messages
+    yield EventMsg { type: 'ToolResult', turnId, result: {...} }
+
+→ SSE 帧 → Web 前端 → events.ts reducer → Turn.steps
+
+关键转换点
+
+┌─────────────────┬───────────────────────┬────────────────────┐
+│      位置       │         输入          │        输出        │
+├─────────────────┼───────────────────────┼────────────────────┤
+│                 │ argsBuffer =          │ parsedArgs = {     │
+│ stream.ts:28    │ '{"path":"src/a.ts"}' │ path: "src/a.ts" } │
+│                 │  (字符串)             │  (对象)            │
+├─────────────────┼───────────────────────┼────────────────────┤
+│ stream.ts:45    │ name = "fs_read"      │ name = "fs.read"   │
+│                 │ (sanitized)           │ (原名 via nameMap) │
+├─────────────────┼───────────────────────┼────────────────────┤
+│ loop.ts:78      │ LLMEvent.tool_call    │ pendingToolCalls + │
+│                 │                       │  yield AgentEvent  │
+├─────────────────┼───────────────────────┼────────────────────┤
+│ registry.ts:94  │ call.args = { path:   │ impl.execute(args, │
+│                 │ "src/a.ts" }          │  ctx) → string     │
+├─────────────────┼───────────────────────┼────────────────────┤
+│                 │                       │ messages.push({    │
+│ loop.ts:155-160 │ ToolResult            │ role: 'tool', ...  │
+│                 │                       │ })                 │
+└─────────────────┴───────────────────────┴────────────────────┘
+```

@@ -2,6 +2,10 @@ import { z } from 'zod';
 
 // —— Tool 基础类型 —— //
 
+//   ToolDefinition { name, description, parameters }
+//   ToolCall       { id, name, args }
+//   ToolResult     { toolCallId, ok, content }
+
 export const ToolCallSchema = z.object({
   args: z.record(z.unknown()).default({}),
   id: z.string(),

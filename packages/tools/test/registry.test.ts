@@ -21,11 +21,14 @@ describe('ToolRegistry', () => {
     await rmDir(cwd);
   });
 
-  it('list() 返回三个 builtin 定义', () => {
+  it('list() 返回 5 个 builtin 定义', () => {
     const reg = new ToolRegistry({ cwd, confirmPolicy: 'auto' });
     const list = reg.list();
     const names = list.map((t) => t.name).toSorted();
-    expect(names).toEqual(['fs.read', 'fs.write', 'shell.exec']);
+    expect(names).toHaveLength(5);
+    expect(names).toContain('fs_read');
+    expect(names).toContain('fs_edit');
+    expect(names).toContain('grep');
   });
 
   it('未知工具名 → ok:false 且 content 含 unknown tool', async () => {
@@ -37,14 +40,14 @@ describe('ToolRegistry', () => {
     expect(result.toolCallId).toBe('c1');
   });
 
-  it('普通成功路径：fs.read 读取临时文件', async () => {
+  it('普通成功路径：fs_read 读取临时文件', async () => {
     const file = path.join(cwd, 'a.txt');
     await writeFile(file, 'hello world');
     const reg = new ToolRegistry({ cwd, confirmPolicy: 'auto' });
-    const call: ToolCall = { id: 'c2', name: 'fs.read', args: { path: 'a.txt' } };
+    const call: ToolCall = { id: 'c2', name: 'fs_read', args: { path: 'a.txt' } };
     const result = await reg.invoke(call);
     expect(result.ok).toBe(true);
-    expect(result.content).toBe('hello world');
+    expect(result.content).toBe('1: hello world');
     expect(result.toolCallId).toBe('c2');
   });
 
@@ -83,7 +86,7 @@ describe('ToolRegistry', () => {
     const reg = new ToolRegistry({ cwd, confirmPolicy: 'auto' });
     const call: ToolCall = {
       id: 'c5',
-      name: 'fs.read',
+      name: 'fs_read',
       args: { path: '/etc/passwd' },
     };
     const result = await reg.invoke(call);
