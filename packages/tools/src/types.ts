@@ -1,4 +1,4 @@
-import type { ToolCall, ToolDefinition } from '@liskin/core';
+import type { LoggerPort, ToolCall, ToolDefinition } from '@liskin/core';
 
 import type { ConfirmPolicy } from './sandbox/confirm-policy.js';
 
@@ -7,6 +7,8 @@ export interface ToolExecContext {
   signal?: AbortSignal;
   confirmPolicy: ConfirmPolicy;
   pathWhitelist: string[];
+  /** 可选：结构化日志器，用于记录工具执行事件 */
+  logger?: LoggerPort;
 }
 
 export interface ToolExecCallbacks {

@@ -46,10 +46,13 @@ describe('normalizeError', () => {
 
   it('TC7c — 普通 Error → message / unknown', () => {
     const ev = normalizeError(new Error('boom'));
-    expect(ev).toEqual({
+    expect(ev).toMatchObject({
       kind: 'error',
       error: { message: 'boom', code: 'unknown' },
     });
+    if (ev.kind === 'error') {
+      expect(ev.error.stack).toBeDefined();
+    }
   });
 
   it('TC7d — APIError 500 透传 message + status code（无前缀）', () => {
@@ -72,10 +75,13 @@ describe('normalizeError', () => {
 
   it('TC7f — APIUserAbortError → aborted', () => {
     const ev = normalizeError(new APIUserAbortError({ message: 'aborted by user' }));
-    expect(ev).toEqual({
+    expect(ev).toMatchObject({
       kind: 'error',
       error: { message: 'request aborted', code: 'aborted' },
     });
+    if (ev.kind === 'error') {
+      expect(ev.error.stack).toBeDefined();
+    }
     expect(isAbortedEvent(ev)).toBe(true);
   });
 

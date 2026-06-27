@@ -36,8 +36,21 @@ export const fsWrite: ToolImpl = {
   async execute(args, ctx) {
     const parsed = FsWriteArgs.parse(args);
     const abs = path.isAbsolute(parsed.path) ? parsed.path : path.resolve(ctx.cwd, parsed.path);
+
+    const size = Buffer.byteLength(parsed.content, 'utf8');
+    const lineCount = parsed.content.split('\n').length;
+
     await fs.mkdir(path.dirname(abs), { recursive: true });
     await fs.writeFile(abs, parsed.content, 'utf8');
-    return `wrote ${parsed.content.length} bytes to ${abs}`;
+
+    // 记录文件操作事件（内容已由脱敏层自动处理）
+    ctx.logger?.info('fs.write', {
+      path: abs,
+      size,
+      line_count: lineCount,
+      content: parsed.content, // 脱敏层会自动替换为 [REDACTED: <hash>]
+    });
+
+    return `wrote ${size} bytes to ${abs}`;
   },
 };

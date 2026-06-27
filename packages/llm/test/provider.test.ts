@@ -117,10 +117,13 @@ describe('OpenAIProvider — chatStream 集成', () => {
       provider.chatStream({ messages: [{ role: 'user', content: 'hi' }] }),
     );
     expect(events.length).toBe(1);
-    expect(events[0]).toEqual<LLMEvent>({
+    expect(events[0]).toMatchObject<LLMEvent>({
       kind: 'error',
       error: { message: 'unauthorized: Invalid API key', code: '401' },
     });
+    if (events[0].kind === 'error') {
+      expect(events[0].error.stack).toBeDefined();
+    }
   });
 
   it('TC9e — maxRetries 透传给底层 OpenAI 客户端', () => {
