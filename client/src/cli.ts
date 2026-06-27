@@ -13,8 +13,8 @@ import { Command } from 'commander';
 import type { ProviderConfig } from '@liskin/core';
 import { ToolRegistry } from '@liskin/tools';
 import { startServer } from '@liskin/server';
-import { runExec } from './exec.js';
-import { runChat } from './chat.js';
+import { runExec } from './exec/index.js';
+import { runChat } from './chat/index.js';
 
 // 统一配置层
 import { loadConfig, defaultDbPath } from '@liskin/config';
@@ -177,6 +177,17 @@ program
   .option('--no-save', 'do not persist session (use in-memory store)')
   .option('--db <path>', 'sqlite db path for session persistence')
   .option(
+    '--log-level <level>',
+    'log level: trace | debug | info | warn | error (default: info)',
+    (v: string): 'trace' | 'debug' | 'info' | 'warn' | 'error' => {
+      if (!['trace', 'debug', 'info', 'warn', 'error'].includes(v)) {
+        throw new Error(`invalid --log-level: ${v}`);
+      }
+      return v as 'trace' | 'debug' | 'info' | 'warn' | 'error';
+    },
+  )
+  .option('--log-verbose', 'enable verbose logging (include file content in local logs)')
+  .option(
     '--confirm <policy>',
     'tool confirm policy: auto | ask | deny (default: ask)',
     (v: string): 'auto' | 'ask' | 'deny' => {
@@ -202,6 +213,8 @@ program
     const dbPath = (raw.db as string | undefined) ?? cfg.dbPath;
     const confirmPolicy =
       (raw.confirm as 'auto' | 'ask' | 'deny' | undefined) ?? cfg.confirmPolicy ?? 'ask';
+    const logLevel = raw.logLevel as 'trace' | 'debug' | 'info' | 'warn' | 'error' | undefined;
+    const logVerbose = Boolean(raw.logVerbose);
 
     if (!apiKey) {
       console.error(
@@ -221,6 +234,8 @@ program
       noSave,
       ...(dbPath ? { dbPath } : {}),
       confirmPolicy,
+      ...(logLevel ? { logLevel } : {}),
+      logVerbose,
     });
   });
 

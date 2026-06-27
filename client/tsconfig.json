@@ -2,7 +2,15 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "..",
+    "paths": {
+      "@liskin/config": ["../packages/config/src/index.ts"],
+      "@liskin/core": ["../packages/core/src/index.ts"],
+      "@liskin/llm": ["../packages/llm/src/index.ts"],
+      "@liskin/protocol": ["../packages/protocol/src/index.ts"],
+      "@liskin/server": ["../packages/server/src/index.ts"],
+      "@liskin/tools": ["../packages/tools/src/index.ts"]
+    }
   },
-  "include": ["src"]
+  "include": ["src", "test"]
 }

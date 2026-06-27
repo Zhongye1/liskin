@@ -12,29 +12,15 @@ import { InMemoryStore, InProcessKernelClient } from '@liskin/core';
 import { createProvider } from '@liskin/llm';
 import { ToolRegistry } from '@liskin/tools';
 
+import type { ExecOptions, ExecResult } from './types.js';
+
 import {
   writeToken,
   writeToolCall,
   writeToolProgress,
   writeToolResult,
   writeError,
-} from './render.js';
-
-export interface ExecOptions {
-  apiKey: string;
-  baseURL?: string;
-  model: string;
-  cwd: string;
-  /** 单次任务最大 LLM 回合数 */
-  maxTurns?: number;
-  /** 系统提示 */
-  system?: string;
-}
-
-export interface ExecResult {
-  ok: boolean;
-  turnEndReason: string;
-}
+} from '../render/index.js';
 
 /**
  * 运行一次任务，把事件流打印到 stdout/stderr。

@@ -18,8 +18,12 @@ export type {
   StorePort,
   SessionRecord,
   SessionSummary,
+  LoggerPort,
+  LogLevel,
+  LogContext,
+  LogEntry,
 } from './ports/index.js';
-export { ConfirmRequiredError } from './ports/index.js';
+export { ConfirmRequiredError, NoopLogger } from './ports/index.js';
 
 // —— Harness —— //
 export type { HarnessPort } from './harness/index.js';

@@ -14,6 +14,7 @@ export type Usage = z.infer<typeof UsageSchema>;
 export const NormalizedErrorSchema = z.object({
   message: z.string(),
   code: z.string().optional(),
+  stack: z.string().optional(),
 });
 export type NormalizedError = z.infer<typeof NormalizedErrorSchema>;
 

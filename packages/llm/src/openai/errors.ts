@@ -20,13 +20,15 @@ type ErrorEvent = Extract<LLMEvent, { kind: 'error' }>;
  *                                      code = String(err.status ?? 'unknown')
  *  5. 普通 Error                     → { code: 'unknown', message: err.message }
  *  6. 非 Error                        → { code: 'unknown', message: String(err) }
+ *
+ * 所有错误事件都包含 stack 字段（如果可用），用于调试。
  */
 export function normalizeError(error: unknown): ErrorEvent {
   // 1. 用户主动取消
   if (error instanceof APIUserAbortError) {
     return {
       kind: 'error',
-      error: { message: 'request aborted', code: 'aborted' },
+      error: { message: 'request aborted', code: 'aborted', stack: error.stack },
     };
   }
 
@@ -34,7 +36,7 @@ export function normalizeError(error: unknown): ErrorEvent {
   if (error instanceof APIConnectionTimeoutError) {
     return {
       kind: 'error',
-      error: { message: error.message, code: 'timeout' },
+      error: { message: error.message, code: 'timeout', stack: error.stack },
     };
   }
 
@@ -42,7 +44,7 @@ export function normalizeError(error: unknown): ErrorEvent {
   if (error instanceof APIConnectionError) {
     return {
       kind: 'error',
-      error: { message: error.message, code: 'connection' },
+      error: { message: error.message, code: 'connection', stack: error.stack },
     };
   }
 
@@ -57,11 +59,14 @@ export function normalizeError(error: unknown): ErrorEvent {
       message = `unauthorized: ${baseMsg}`;
     } else if (error.status === 429) {
       message = `rate limited: ${baseMsg}`;
+    } else if (error.status === 404) {
+      // 404 错误通常是 base URL 配置错误，添加额外提示
+      message = `${baseMsg} (check your baseURL configuration - the SDK appends '/chat/completions')`;
     }
 
     return {
       kind: 'error',
-      error: { message, code },
+      error: { message, code, stack: error.stack },
     };
   }
 
@@ -69,7 +74,7 @@ export function normalizeError(error: unknown): ErrorEvent {
   if (error instanceof Error) {
     return {
       kind: 'error',
-      error: { message: error.message, code: 'unknown' },
+      error: { message: error.message, code: 'unknown', stack: error.stack },
     };
   }
 
