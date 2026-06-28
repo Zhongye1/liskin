@@ -30,3 +30,5 @@ server/.air/
 # Test range
 testrange/
 docs/N_DRC/
+# Local pnpm store (not for commit)
+.pnpm-store/
