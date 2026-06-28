@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useSessionStore } from '../store/session-store';
 import { formatToolArgs } from '../../../shared/lib/tool-views';
 import { Markdown } from '../../../shared/components/Markdown';
-import { IconCheck, IconSpinner } from '../../../shared/ui/icons';
+import { Check, Loader } from 'lucide-react';
 
 export function TextStep({ step }: { step: Extract<Step, { kind: 'text' }> }) {
   const text = step.parts.join('');
@@ -17,10 +17,10 @@ export function TextStep({ step }: { step: Extract<Step, { kind: 'text' }> }) {
 /** 工具步骤状态点：复刻设计稿的彩色圆点 + 状态语义。 */
 function StatusDot({ status }: { status: string }) {
   if (status === 'running') {
-    return <IconSpinner size={13} className="text-accent" />;
+    return <Loader size={13} className="text-accent" />;
   }
   if (status === 'done') {
-    return <IconCheck size={13} className="text-ok" />;
+    return <Check size={13} className="text-ok" />;
   }
   if (status === 'error') {
     return <span className="text-sm leading-none text-danger">✗</span>;

@@ -1,6 +1,6 @@
 import type { Turn } from '../lib/events';
 import { ToolStep, TextStep, ConfirmCard } from './Steps';
-import { IconSpinner } from '../../../shared/ui/icons';
+import { Loader } from 'lucide-react';
 
 export function TurnItem({ turn }: { turn: Turn }) {
   return (
@@ -22,7 +22,7 @@ export function TurnItem({ turn }: { turn: Turn }) {
         })}
         {turn.status === 'running' ? (
           <div className="flex items-center gap-2 pl-1 text-xs text-ink-faint">
-            <IconSpinner size={13} />
+            <Loader size={13} />
             <span className="animate-pulse">Pondering…</span>
           </div>
         ) : null}

@@ -4,7 +4,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { useSessionStore } from '../store/session-store';
 import { TurnItem } from './TurnItem';
 import { IconButton } from '../../../shared/ui/primitives';
-import { IconChevronDown, IconSend, IconStop } from '../../../shared/ui/icons';
+import { ChevronDown, Send, Square } from 'lucide-react';
 
 /**
  * 单个会话的对话视图。
@@ -60,7 +60,7 @@ export function Conversation() {
       <header className="flex items-center justify-between border-b border-line px-5 py-3">
         <div className="flex items-center gap-2">
           <h1 className="truncate text-sm font-medium text-ink">{title}</h1>
-          <IconChevronDown size={15} className="text-ink-faint" />
+          <ChevronDown size={15} className="text-ink-faint" />
         </div>
       </header>
 
@@ -132,7 +132,7 @@ export function Conversation() {
               title="停止"
               className="bg-danger/10 text-danger hover:bg-danger/20"
             >
-              <IconStop size={15} />
+              <Square size={15} />
             </IconButton>
           ) : (
             <IconButton
@@ -141,7 +141,7 @@ export function Conversation() {
               disabled={!draft.trim()}
               className="bg-accent text-white hover:bg-accent-ink disabled:bg-line disabled:text-ink-faint"
             >
-              <IconSend size={15} />
+              <Send size={15} />
             </IconButton>
           )}
         </div>

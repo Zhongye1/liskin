@@ -1,6 +1,6 @@
 import type { SessionInfo } from '@liskin/core';
 import { Badge, IconButton, Pill } from '../../shared/ui/primitives';
-import { IconCloud, IconGitBranch, IconPlus, IconSettings } from '../../shared/ui/icons';
+import { Cloud, GitBranch, Plus, Settings } from 'lucide-react';
 
 interface Sidebar_Chat_Props {
   sessions: SessionInfo[];
@@ -46,7 +46,7 @@ export function Sidebar_Chat({
           <span className="text-sm text-ink-faint">Ask Liskin to write code…</span>
           <div className="mt-6 flex justify-end">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent-soft text-accent-ink transition group-hover:bg-accent group-hover:text-white">
-              <IconPlus size={15} />
+              <Plus size={15} />
             </span>
           </div>
         </button>
@@ -54,10 +54,10 @@ export function Sidebar_Chat({
 
       {/* 项目 / Cloud 选择 */}
       <div className="mt-3 grid grid-cols-2 gap-2 px-3">
-        <Pill icon={<IconGitBranch size={14} />} className="col-span-1">
+        <Pill icon={<GitBranch size={14} />} className="col-span-1">
           {project}
         </Pill>
-        <Pill icon={<IconCloud size={14} />} className="col-span-1">
+        <Pill icon={<Cloud size={14} />} className="col-span-1">
           Cloud
         </Pill>
       </div>
@@ -114,7 +114,7 @@ export function Sidebar_Chat({
       {/* 底部设置 */}
       <div className="flex items-center gap-1 border-t border-line px-3 py-2">
         <IconButton onClick={onOpenSettings} title="设置">
-          <IconSettings size={16} />
+          <Settings size={16} />
         </IconButton>
         <span className="text-xs text-ink-faint">Settings</span>
       </div>

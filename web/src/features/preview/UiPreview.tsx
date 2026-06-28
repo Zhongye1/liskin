@@ -1,14 +1,5 @@
 import { Badge, IconButton, Pill } from '../../shared/ui/primitives';
-import {
-  IconCheck,
-  IconChevronDown,
-  IconCloud,
-  IconGitBranch,
-  IconPlus,
-  IconSend,
-  IconSettings,
-  IconSpinner,
-} from '../../shared/ui/icons';
+import { Check, ChevronDown, Cloud, GitBranch, Plus, Send, Settings, Loader } from 'lucide-react';
 import { MOCK_PROJECT, MOCK_SESSIONS, MOCK_TURNS } from '../../shared/ui/harness-fixtures';
 import { BrowserChrome } from '../../app/components/BrowserChrome';
 
@@ -40,15 +31,15 @@ export function UiPreview() {
               <span className="text-sm text-ink-faint">Ask Liskin to write code…</span>
               <div className="mt-6 flex justify-end">
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent-soft text-accent-ink">
-                  <IconPlus size={15} />
+                  <Plus size={15} />
                 </span>
               </div>
             </div>
           </div>
 
           <div className="mt-3 grid grid-cols-2 gap-2 px-3">
-            <Pill icon={<IconGitBranch size={14} />}>{MOCK_PROJECT}</Pill>
-            <Pill icon={<IconCloud size={14} />}>Cloud</Pill>
+            <Pill icon={<GitBranch size={14} />}>{MOCK_PROJECT}</Pill>
+            <Pill icon={<Cloud size={14} />}>Cloud</Pill>
           </div>
 
           <div className="mt-4 flex items-center justify-between px-4 pb-1">
@@ -80,7 +71,7 @@ export function UiPreview() {
                     </span>
                     {s.status === 'answered' ? (
                       <Badge tone="accent">
-                        <IconCheck size={11} /> Answered
+                        <Check size={11} /> Answered
                       </Badge>
                     ) : null}
                     {s.meta ? <Badge tone="ok">{s.meta}</Badge> : null}
@@ -93,7 +84,7 @@ export function UiPreview() {
 
           <div className="flex items-center gap-1 border-t border-line px-3 py-2">
             <IconButton title="设置">
-              <IconSettings size={16} />
+              <Settings size={16} />
             </IconButton>
             <span className="text-xs text-ink-faint">Settings</span>
           </div>
@@ -105,7 +96,7 @@ export function UiPreview() {
             <h1 className="truncate text-sm font-medium text-ink">
               Round subscription amounts to dollar
             </h1>
-            <IconChevronDown size={15} className="text-ink-faint" />
+            <ChevronDown size={15} className="text-ink-faint" />
           </header>
 
           <div className="flex-1 space-y-5 overflow-auto px-5 py-5">
@@ -125,7 +116,7 @@ export function UiPreview() {
                         className="flex items-center gap-2 px-1 text-sm leading-relaxed text-ink"
                       >
                         {step.state === 'running' ? (
-                          <IconSpinner size={13} className="text-accent" />
+                          <Loader size={13} className="text-accent" />
                         ) : null}
                         <span
                           className={step.state === 'running' ? 'animate-pulse text-ink-faint' : ''}
@@ -136,7 +127,7 @@ export function UiPreview() {
                     ) : (
                       <div key={idx} className="flex items-center gap-2 px-1 py-0.5 text-sm">
                         <span className="inline-flex w-4 shrink-0 items-center justify-center">
-                          <IconCheck size={13} className="text-ok" />
+                          <Check size={13} className="text-ok" />
                         </span>
                         <span className="font-mono font-medium text-ink">{step.tool}</span>
                         <span className="truncate font-mono text-ink-soft">{step.text}</span>
@@ -157,7 +148,7 @@ export function UiPreview() {
                 placeholder="Reply to Liskin…"
               />
               <IconButton title="发送" className="bg-accent text-white hover:bg-accent-ink">
-                <IconSend size={15} />
+                <Send size={15} />
               </IconButton>
             </div>
           </div>

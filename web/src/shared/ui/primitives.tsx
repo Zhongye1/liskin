@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { cn } from '../lib/utils';
-import { IconChevronDown } from './icons';
+import { ChevronDown } from 'lucide-react';
 
 /** 圆形头像（首字母兜底）。 */
 export function Avatar({ label, src, size = 28 }: { label: string; src?: string; size?: number }) {
@@ -71,7 +71,7 @@ export function Pill({
     >
       {icon ? <span className="text-ink-soft">{icon}</span> : null}
       <span className="min-w-0 flex-1 truncate text-left">{children}</span>
-      {trailing ? <IconChevronDown size={14} className="shrink-0 text-ink-faint" /> : null}
+      {trailing ? <ChevronDown size={14} className="shrink-0 text-ink-faint" /> : null}
     </button>
   );
 }
