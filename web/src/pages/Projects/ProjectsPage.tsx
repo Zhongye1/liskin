@@ -3,7 +3,7 @@
  */
 export function ProjectsPage() {
   return (
-    <div className="flex h-full items-center justify-center text-sm text-ink-faint">
+    <div className="flex h-full items-center justify-center text-sm bg-slate-500 text-ink-faint">
       项目 — 即将上线
     </div>
   );

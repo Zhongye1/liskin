@@ -4,13 +4,12 @@ import { useSessionStore } from '../pages/Chats/model/session-store';
 import { Sidebar_Chat } from './components/Sidebar_Chat';
 import { Sidebar_Router } from './components/Sidebar_Router';
 import { HeadBar_Top } from './components/HeadBar_Top';
+import { useWipeNavigate } from './hooks/useWipeNavigate';
+import './wipe.css';
 
-/**
- * 应用外壳：Sidebar_Router（常驻） + section 侧栏（按路由切换） + <Outlet/>。
- * 会话 ID 存在 URL 中（/sessions/:sessionId），store 不再持有 activeSessionId。
- */
 export default function App() {
   const navigate = useNavigate();
+  const wipeNavigate = useWipeNavigate();
   const location = useLocation();
   const { sessionId: activeSessionId } = useParams<{ sessionId: string }>();
   const { sessions, newSession, init } = useSessionStore();
@@ -22,39 +21,36 @@ export default function App() {
   const handleNewSession = () => {
     newSession()
       .then((id) => {
-        if (id) {
-          navigate(`/sessions/${id}`);
-        }
+        if (id) {navigate(`/sessions/${id}`);}
       })
-      .catch(() => {
-        // newSession 内部已处理错误
-      });
+      .catch(() => {});
   };
 
-  const handleSelectSession = (id: string) => {
-    navigate(`/sessions/${id}`);
-  };
+  const handleSelectSession = (id: string) => navigate(`/sessions/${id}`);
 
-  // 仅"会话" section 显示 Sidebar_Chat
   const isChatSection = location.pathname === '/' || location.pathname.startsWith('/sessions/');
 
   return (
     <div className="flex h-screen flex-col bg-canvas">
-      <HeadBar_Top onSettingsClick={() => navigate('/settings')} />
+      <HeadBar_Top onSettingsClick={() => wipeNavigate('/settings')} />
       <div className="flex min-h-0 flex-1 overflow-hidden bg-panel">
+        {/* Sidebar_Router 始终静止，不参与擦除 */}
         <Sidebar_Router />
-        {isChatSection && (
-          <Sidebar_Chat
-            sessions={sessions}
-            activeSessionId={activeSessionId}
-            onNewSession={handleNewSession}
-            onSelectSession={handleSelectSession}
-            onOpenSettings={() => navigate('/settings')}
-          />
-        )}
-        <main className="flex min-w-0 flex-1 flex-col border-l border-line bg-panel">
-          <Outlet />
-        </main>
+        {/* stage 包裹 Sidebar_Chat + main 作为一个整体拍快照、一起擦除 */}
+        <div className="stage flex min-w-0 flex-1 overflow-hidden">
+          {isChatSection && (
+            <Sidebar_Chat
+              sessions={sessions}
+              activeSessionId={activeSessionId}
+              onNewSession={handleNewSession}
+              onSelectSession={handleSelectSession}
+              onOpenSettings={() => wipeNavigate('/settings')}
+            />
+          )}
+          <main className="flex min-w-0 flex-1 flex-col border-l border-line bg-panel overflow-hidden">
+            <Outlet />
+          </main>
+        </div>
       </div>
     </div>
   );

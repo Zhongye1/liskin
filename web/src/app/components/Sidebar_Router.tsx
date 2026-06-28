@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { MessageSquare, Folder, BookOpen, Settings, ChevronRight, ChevronLeft } from 'lucide-react';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { cn } from '../../shared/lib/utils';
+import { pageIndex } from '../hooks/useWipeNavigate';
 
 interface NavItem {
   name: string;
@@ -21,6 +22,7 @@ const NAV_ITEMS: NavItem[] = [
  * 最左侧纵向路由栏：顶级 section 切换。
  * 文字始终在 DOM 中（opacity 控制显隐），保证展开/收缩双向过渡动画。
  * 收缩态 hover 显示 Radix Tooltip，展开态 tooltip 受控关闭。
+ * 跨 section 导航通过 onClick+viewTransition 触发方向擦除。
  */
 export function Sidebar_Router() {
   const [expanded, setExpanded] = useState(false);
@@ -56,6 +58,14 @@ export function Sidebar_Router() {
               <Tooltip.Trigger asChild>
                 <NavLink
                   to={item.path}
+                  viewTransition
+                  onClick={() => {
+                    const from = pageIndex(location.pathname);
+                    const target = pageIndex(item.path);
+                    if (from !== target) {
+                      document.documentElement.dataset.dir = target > from ? 'forward' : 'back';
+                    }
+                  }}
                   className={cn(
                     'flex items-center rounded-xl transition px-2.5 gap-3 shrink-0',
                     expanded ? 'w-full h-10' : 'h-10 w-10',
