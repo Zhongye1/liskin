@@ -1,6 +1,6 @@
-import type { Step } from '../lib/events';
+import type { Step } from '../model/events';
 import { useParams } from 'react-router-dom';
-import { useSessionStore } from '../store/session-store';
+import { useSessionStore } from '../model/session-store';
 import { formatToolArgs } from '../../../shared/lib/tool-views';
 import { Markdown } from '../../../shared/components/Markdown';
 import { Check, Loader } from 'lucide-react';

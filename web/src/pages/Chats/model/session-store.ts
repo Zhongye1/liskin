@@ -3,7 +3,7 @@ import type { EventMsg, NormalizedError, SessionInfo, ToolCall } from '@liskin/c
 import type { KernelClient } from '@liskin/protocol';
 
 import { HttpSseKernelClient } from '../../../api';
-import { applyEvent, messagesToTurns, newTurn, type Turn } from '../lib/events';
+import { applyEvent, messagesToTurns, newTurn, type Turn } from './events';
 
 type Status = 'idle' | 'streaming' | 'awaiting_confirm' | 'error';
 

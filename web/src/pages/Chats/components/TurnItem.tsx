@@ -1,4 +1,4 @@
-import type { Turn } from '../lib/events';
+import type { Turn } from '../model/events';
 import { ToolStep, TextStep, ConfirmCard } from './Steps';
 import { Loader } from 'lucide-react';
 

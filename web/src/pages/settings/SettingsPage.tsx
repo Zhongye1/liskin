@@ -1,8 +1,8 @@
-/* eslint-disable max-lines -- 旧组件，Step 3.3 会重写 */
+/* eslint-disable max-lines -- 旧组件 */
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { Button } from '../../../shared/ui/button';
+import { Button } from '../../shared/ui/button';
 import {
   activateProvider,
   createProvider,
@@ -12,7 +12,7 @@ import {
   type ProviderView,
   type ProviderCreateInput,
   type ProviderUpdateInput,
-} from '../services/providers';
+} from './model/providers';
 
 interface DraftForm {
   id: string;
@@ -81,7 +81,7 @@ function buildPayload(
   return out as ProviderCreateInput | ProviderUpdateInput;
 }
 
-export function ProviderSettings() {
+export function SettingsPage() {
   const [list, setList] = useState<ProviderView[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);

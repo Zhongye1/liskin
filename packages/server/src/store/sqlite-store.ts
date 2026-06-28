@@ -91,9 +91,10 @@ export class SqliteStore implements StorePort {
 
   async loadSession(id: string): Promise<SessionRecord | null> {
     const row = this.db
-      .prepare<[string], { id: string; created_at: string; updated_at: string; messages: string }>(
-        'SELECT id, created_at, updated_at, messages FROM sessions WHERE id = ?',
-      )
+      .prepare<
+        [string],
+        { id: string; created_at: string; updated_at: string; messages: string }
+      >('SELECT id, created_at, updated_at, messages FROM sessions WHERE id = ?')
       .get(id);
     if (!row) {
       return null;
@@ -240,9 +241,10 @@ export class SqliteStore implements StorePort {
 
   async listSessions(): Promise<SessionSummary[]> {
     const rows = this.db
-      .prepare<[], { id: string; created_at: string; updated_at: string; messages: string }>(
-        'SELECT id, created_at, updated_at, messages FROM sessions ORDER BY updated_at DESC',
-      )
+      .prepare<
+        [],
+        { id: string; created_at: string; updated_at: string; messages: string }
+      >('SELECT id, created_at, updated_at, messages FROM sessions ORDER BY updated_at DESC')
       .all();
     return rows.map((r) => ({
       id: r.id,
