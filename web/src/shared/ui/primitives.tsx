@@ -3,23 +3,9 @@ import { cn } from '../lib/utils';
 import { IconChevronDown } from './icons';
 
 /** 圆形头像（首字母兜底）。 */
-export function Avatar({
-  label,
-  src,
-  size = 28,
-}: {
-  label: string;
-  src?: string;
-  size?: number;
-}) {
+export function Avatar({ label, src, size = 28 }: { label: string; src?: string; size?: number }) {
   return src ? (
-    <img
-      src={src}
-      alt={label}
-      width={size}
-      height={size}
-      className="rounded-full object-cover"
-    />
+    <img src={src} alt={label} width={size} height={size} className="rounded-full object-cover" />
   ) : (
     <span
       className="inline-flex items-center justify-center rounded-full bg-accent-soft font-medium text-accent-ink"
@@ -85,9 +71,7 @@ export function Pill({
     >
       {icon ? <span className="text-ink-soft">{icon}</span> : null}
       <span className="min-w-0 flex-1 truncate text-left">{children}</span>
-      {trailing ? (
-        <IconChevronDown size={14} className="shrink-0 text-ink-faint" />
-      ) : null}
+      {trailing ? <IconChevronDown size={14} className="shrink-0 text-ink-faint" /> : null}
     </button>
   );
 }

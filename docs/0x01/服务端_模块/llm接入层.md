@@ -1,5 +1,5 @@
 Model Gateway 在你们项目里本质是一个 LLM 统一接入层 +  
- 治理层，主要负责这几件事：
+治理层，主要负责这几件事：
 
 1. 统一 API 协议入口  
    对外提供标准化接口（OpenAI/Anthropic 兼容）：
@@ -8,8 +8,8 @@ Model Gateway 在你们项目里本质是一个 LLM 统一接入层 +
    - /api/model/v1/messages
 
 见 server/application/modelgateway/router.go:12  
- 2. 鉴权、权限、配额控制  
- 每个请求先过：
+2. 鉴权、权限、配额控制  
+每个请求先过：
 
 - AKAuth
 - ModelAccessCheck
@@ -17,23 +17,23 @@ Model Gateway 在你们项目里本质是一个 LLM 统一接入层 +
   见 server/application/modelgateway/router.go:12
 
 3.  模型请求路由与多 Provider 转发  
-     把请求转发到具体 provider（openrouter/ark/modelhub 等），并支持动态按
+    把请求转发到具体 provider（openrouter/ark/modelhub 等），并支持动态按
     TCC 配置创建 provider。  
-     见 server/application/modelgateway/biz/logic/app.go:26
+    见 server/application/modelgateway/biz/logic/app.go:26
 4.  失败兜底与降级（fallback）  
     当 provider 异常或限流时按策略切换下一个 provider，保证可用性。  
     见 server/application/modelgateway/biz/logic/proxy.go:553
 5.  协议兼容与流式处理  
-     支持 responses/chat-completions 互转、流式 SSE 处理与聚合。  
-     见 server/application/modelgateway/biz/logic/proxy.go:140、server/appl
+    支持 responses/chat-completions 互转、流式 SSE 处理与聚合。  
+    见 server/application/modelgateway/biz/logic/proxy.go:140、server/appl
     ication/modelgateway/biz/handler/responses.go:111
 6.  用量统计、计费与观测埋点  
-     记录 token usage、tool calls、请求链路指标和上报，支撑计费与运维观测。
+    记录 token usage、tool calls、请求链路指标和上报，支撑计费与运维观测。
     见 server/application/modelgateway/biz/handler/chat_completion.go:196
 
 一句话总结：  
- Model Gateway 不是“单纯转发层”，而是你们 LLM  
- 调用的统一治理中枢（接入标准化 + 安全/配额 + 路由容灾 + 观测计费）。
+Model Gateway 不是“单纯转发层”，而是你们 LLM  
+调用的统一治理中枢（接入标准化 + 安全/配额 + 路由容灾 + 观测计费）。
 
 ---
 

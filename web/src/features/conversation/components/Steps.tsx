@@ -44,9 +44,7 @@ export function ToolStep({ step }: { step: Extract<Step, { kind: 'tool' }> }) {
           <StatusDot status={step.status} />
         </span>
         <span className="font-mono font-medium text-ink">{step.call.name}</span>
-        <span className="truncate font-mono text-ink-soft">
-          {formatToolArgs(step.call)}
-        </span>
+        <span className="truncate font-mono text-ink-soft">{formatToolArgs(step.call)}</span>
       </div>
 
       {/* 流式输出 */}
@@ -57,9 +55,7 @@ export function ToolStep({ step }: { step: Extract<Step, { kind: 'tool' }> }) {
       ) : null}
 
       {/* 工具结果 */}
-      {step.result ? (
-        <TerminalOutput text={step.result.content} ok={step.result.ok} />
-      ) : null}
+      {step.result ? <TerminalOutput text={step.result.content} ok={step.result.ok} /> : null}
 
       {step.status === 'confirm' ? <ConfirmCard callId={step.call.id} /> : null}
     </div>

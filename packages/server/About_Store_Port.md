@@ -135,7 +135,7 @@
      upsertProvider(envSeed, {onlyIfMissing: true})
      → 如果库里已有同 id（用户之前编辑过），保留用户版本
      → 如果是全新实例，写入 env 配置并自动设为 active
-     
+
   2. source 字段：env → 来自环境变量 / user → 用户在 Web UI 编辑过。
      一旦用户编辑，source 升级为 user，重启时 env 不再覆盖。
      PUT 时 apiKey 为空字符串 → 视为保持原值。

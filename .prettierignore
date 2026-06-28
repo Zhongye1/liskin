@@ -2,8 +2,6 @@ node_modules
 dist
 *.tsbuildinfo
 pnpm-lock.yaml
-server/
-web/
 **/dist/**
 coverage/
 .turbo/

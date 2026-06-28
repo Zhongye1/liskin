@@ -29,7 +29,7 @@ class NoopTools implements ToolPort {
 class StaticLLM implements LLMPort {
   constructor(private readonly events: LLMEvent[]) {}
   chatStream(_req: ChatRequest): AsyncIterable<LLMEvent> {
-    const {events} = this;
+    const { events } = this;
     return (async function* () {
       for (const ev of events) {
         yield ev;

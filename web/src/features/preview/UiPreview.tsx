@@ -9,11 +9,7 @@ import {
   IconSettings,
   IconSpinner,
 } from '../../shared/ui/icons';
-import {
-  MOCK_PROJECT,
-  MOCK_SESSIONS,
-  MOCK_TURNS,
-} from '../../shared/ui/harness-fixtures';
+import { MOCK_PROJECT, MOCK_SESSIONS, MOCK_TURNS } from '../../shared/ui/harness-fixtures';
 import { BrowserChrome } from '../../app/components/BrowserChrome';
 
 /**
@@ -33,9 +29,7 @@ export function UiPreview() {
             <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-accent text-sm font-semibold text-white">
               L
             </span>
-            <span className="text-[15px] font-semibold tracking-tight text-ink">
-              Liskin Code
-            </span>
+            <span className="text-[15px] font-semibold tracking-tight text-ink">Liskin Code</span>
             <Badge tone="neutral" className="ml-1">
               preview
             </Badge>
@@ -43,9 +37,7 @@ export function UiPreview() {
 
           <div className="px-3">
             <div className="w-full rounded-xl2 border border-line bg-card p-3 shadow-panel">
-              <span className="text-sm text-ink-faint">
-                Ask Liskin to write code…
-              </span>
+              <span className="text-sm text-ink-faint">Ask Liskin to write code…</span>
               <div className="mt-6 flex justify-end">
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent-soft text-accent-ink">
                   <IconPlus size={15} />
@@ -93,9 +85,7 @@ export function UiPreview() {
                     ) : null}
                     {s.meta ? <Badge tone="ok">{s.meta}</Badge> : null}
                   </div>
-                  <span className="truncate text-xs text-ink-faint">
-                    {s.project}
-                  </span>
+                  <span className="truncate text-xs text-ink-faint">{s.project}</span>
                 </div>
               );
             })}
@@ -138,29 +128,18 @@ export function UiPreview() {
                           <IconSpinner size={13} className="text-accent" />
                         ) : null}
                         <span
-                          className={
-                            step.state === 'running'
-                              ? 'animate-pulse text-ink-faint'
-                              : ''
-                          }
+                          className={step.state === 'running' ? 'animate-pulse text-ink-faint' : ''}
                         >
                           {step.text}
                         </span>
                       </div>
                     ) : (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-2 px-1 py-0.5 text-sm"
-                      >
+                      <div key={idx} className="flex items-center gap-2 px-1 py-0.5 text-sm">
                         <span className="inline-flex w-4 shrink-0 items-center justify-center">
                           <IconCheck size={13} className="text-ok" />
                         </span>
-                        <span className="font-mono font-medium text-ink">
-                          {step.tool}
-                        </span>
-                        <span className="truncate font-mono text-ink-soft">
-                          {step.text}
-                        </span>
+                        <span className="font-mono font-medium text-ink">{step.tool}</span>
+                        <span className="truncate font-mono text-ink-soft">{step.text}</span>
                       </div>
                     ),
                   )}
@@ -177,10 +156,7 @@ export function UiPreview() {
                 className="max-h-40 flex-1 resize-none bg-transparent px-2 py-1.5 text-sm text-ink placeholder:text-ink-faint focus:outline-none"
                 placeholder="Reply to Liskin…"
               />
-              <IconButton
-                title="发送"
-                className="bg-accent text-white hover:bg-accent-ink"
-              >
+              <IconButton title="发送" className="bg-accent text-white hover:bg-accent-ink">
                 <IconSend size={15} />
               </IconButton>
             </div>

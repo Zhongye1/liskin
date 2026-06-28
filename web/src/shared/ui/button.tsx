@@ -9,18 +9,18 @@ const buttonVariants = cva(
       intent: {
         primary: 'bg-slate-900 text-white hover:bg-slate-700',
         success: 'bg-emerald-600 text-white hover:bg-emerald-500',
-        ghost: 'bg-transparent text-slate-700 hover:bg-slate-100'
+        ghost: 'bg-transparent text-slate-700 hover:bg-slate-100',
       },
       size: {
         sm: 'h-8 px-3',
-        md: 'h-10 px-4'
-      }
+        md: 'h-10 px-4',
+      },
     },
     defaultVariants: {
       intent: 'primary',
-      size: 'md'
-    }
-  }
+      size: 'md',
+    },
+  },
 );
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<typeof buttonVariants>;

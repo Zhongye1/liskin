@@ -101,9 +101,7 @@ export function Conversation() {
           </div>
         )}
         {error ? (
-          <p className="mt-2 rounded-lg bg-danger/10 p-2 text-xs text-danger">
-            {error.message}
-          </p>
+          <p className="mt-2 rounded-lg bg-danger/10 p-2 text-xs text-danger">{error.message}</p>
         ) : null}
       </div>
 

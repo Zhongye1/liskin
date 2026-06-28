@@ -19,9 +19,4 @@ export type AgentEvent =
   | { kind: 'error'; error: { message: string; code?: string; stack?: string } };
 
 export type AgentStatus =
-  | 'idle'
-  | 'streaming'
-  | 'awaiting_tool'
-  | 'awaiting_user'
-  | 'done'
-  | 'error';
+  'idle' | 'streaming' | 'awaiting_tool' | 'awaiting_user' | 'done' | 'error';

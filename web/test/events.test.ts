@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { EventMsg, ToolCall, ToolResult } from '@liskin/core';
 
- import { applyEvent, messagesToTurns, newTurn } from '../src/features/conversation/lib/events';
+import { applyEvent, messagesToTurns, newTurn } from '../src/features/conversation/lib/events';
 
 const SESSION = 'sess-1';
 const TURN = 'turn-1';
@@ -44,8 +44,26 @@ describe('applyEvent / reducer', () => {
   it('ToolProgress 写入对应流并置 running', () => {
     const turn = mkTurn();
     applyEvent(turn, ev({ type: 'ToolCall', turnId: TURN, call: TOOL_CALL }));
-    applyEvent(turn, ev({ type: 'ToolProgress', turnId: TURN, callId: 'call-1', stream: 'stdout', chunk: 'line1\n' }));
-    applyEvent(turn, ev({ type: 'ToolProgress', turnId: TURN, callId: 'call-1', stream: 'stderr', chunk: 'warn\n' }));
+    applyEvent(
+      turn,
+      ev({
+        type: 'ToolProgress',
+        turnId: TURN,
+        callId: 'call-1',
+        stream: 'stdout',
+        chunk: 'line1\n',
+      }),
+    );
+    applyEvent(
+      turn,
+      ev({
+        type: 'ToolProgress',
+        turnId: TURN,
+        callId: 'call-1',
+        stream: 'stderr',
+        chunk: 'warn\n',
+      }),
+    );
     const [step] = turn.steps;
     expect(step?.kind).toBe('tool');
     if (step?.kind === 'tool') {
@@ -76,7 +94,10 @@ describe('applyEvent / reducer', () => {
 
   it('未对应任何 tool step 的 ToolProgress/Result 安全忽略', () => {
     const turn = mkTurn();
-    applyEvent(turn, ev({ type: 'ToolProgress', turnId: TURN, callId: 'ghost', stream: 'stdout', chunk: 'x' }));
+    applyEvent(
+      turn,
+      ev({ type: 'ToolProgress', turnId: TURN, callId: 'ghost', stream: 'stdout', chunk: 'x' }),
+    );
     applyEvent(turn, ev({ type: 'ToolResult', turnId: TURN, result: okResult }));
     expect(turn.steps).toHaveLength(0);
   });
@@ -102,14 +123,25 @@ describe('applyEvent / reducer', () => {
 
   it('Error 事件把 turn.status 置 error', () => {
     const turn = mkTurn();
-    applyEvent(turn, ev({ type: 'Error', turnId: TURN, sessionId: SESSION, error: { message: 'fail', code: 'E1' } }));
+    applyEvent(
+      turn,
+      ev({
+        type: 'Error',
+        turnId: TURN,
+        sessionId: SESSION,
+        error: { message: 'fail', code: 'E1' },
+      }),
+    );
     expect(turn.status).toBe('error');
   });
 
   it('会话生命周期事件不影响 turn', () => {
     const turn = mkTurn();
     applyEvent(turn, ev({ type: 'Token', turnId: TURN, text: 'hi' }));
-    applyEvent(turn, ev({ type: 'SessionCreated', sessionId: SESSION, createdAt: 't', isNew: true }));
+    applyEvent(
+      turn,
+      ev({ type: 'SessionCreated', sessionId: SESSION, createdAt: 't', isNew: true }),
+    );
     applyEvent(turn, ev({ type: 'SessionList', sessions: [] }));
     expect(turn.steps).toHaveLength(1);
     expect(turn.status).toBe('running');
@@ -121,10 +153,22 @@ describe('applyEvent / reducer', () => {
     applyEvent(turn, ev({ type: 'Token', turnId: TURN, text: '我来读文件' }));
     applyEvent(turn, ev({ type: 'ToolCall', turnId: TURN, call: TOOL_CALL }));
     applyEvent(turn, ev({ type: 'ToolConfirmRequired', turnId: TURN, call: TOOL_CALL }));
-    applyEvent(turn, ev({ type: 'ToolProgress', turnId: TURN, callId: 'call-1', stream: 'stdout', chunk: 'reading' }));
+    applyEvent(
+      turn,
+      ev({
+        type: 'ToolProgress',
+        turnId: TURN,
+        callId: 'call-1',
+        stream: 'stdout',
+        chunk: 'reading',
+      }),
+    );
     applyEvent(turn, ev({ type: 'ToolResult', turnId: TURN, result: okResult }));
     applyEvent(turn, ev({ type: 'Token', turnId: TURN, text: '文件内容是 hello' }));
-    applyEvent(turn, ev({ type: 'TurnEnd', turnId: TURN, sessionId: SESSION, reason: 'completed' }));
+    applyEvent(
+      turn,
+      ev({ type: 'TurnEnd', turnId: TURN, sessionId: SESSION, reason: 'completed' }),
+    );
 
     expect(turn.steps.map((s) => s.kind)).toEqual(['text', 'tool', 'text']);
     expect(turn.steps[1]?.kind === 'tool' && turn.steps[1].status).toBe('done');
@@ -134,9 +178,7 @@ describe('applyEvent / reducer', () => {
 
 describe('messagesToTurns / 历史重建', () => {
   it('system 消息不产生 turn', () => {
-    const turns = messagesToTurns([
-      { role: 'system', content: 'you are helpful' },
-    ]);
+    const turns = messagesToTurns([{ role: 'system', content: 'you are helpful' }]);
     expect(turns).toHaveLength(0);
   });
 
@@ -186,9 +228,7 @@ describe('messagesToTurns / 历史重建', () => {
   });
 
   it('无前导 user 的 assistant 挂到空 userContent 的兜底 turn', () => {
-    const turns = messagesToTurns([
-      { role: 'assistant', content: 'orphan' },
-    ]);
+    const turns = messagesToTurns([{ role: 'assistant', content: 'orphan' }]);
     expect(turns).toHaveLength(1);
     expect(turns[0]?.userContent).toBe('');
     expect(turns[0]?.steps[0]?.kind).toBe('text');

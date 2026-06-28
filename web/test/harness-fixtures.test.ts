@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  MOCK_PROJECT,
-  MOCK_SESSIONS,
-  MOCK_TURNS,
-} from '../src/shared/ui/harness-fixtures';
+import { MOCK_PROJECT, MOCK_SESSIONS, MOCK_TURNS } from '../src/shared/ui/harness-fixtures';
 
 /**
  * Harness fixtures 的形状契约测试。
@@ -47,9 +43,7 @@ describe('harness fixtures', () => {
   });
 
   it('tool step 携带 tool 名称', () => {
-    const toolSteps = MOCK_TURNS.flatMap((t) => t.steps ?? []).filter(
-      (s) => s.kind === 'tool',
-    );
+    const toolSteps = MOCK_TURNS.flatMap((t) => t.steps ?? []).filter((s) => s.kind === 'tool');
     expect(toolSteps.length).toBeGreaterThan(0);
     for (const s of toolSteps) {
       expect(s.tool).toBeTruthy();

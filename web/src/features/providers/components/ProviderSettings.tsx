@@ -12,7 +12,7 @@ import {
   type ProviderView,
   type ProviderCreateInput,
   type ProviderUpdateInput,
- } from '../services/providers';
+} from '../services/providers';
 
 interface DraftForm {
   id: string;
@@ -49,7 +49,10 @@ function rowToForm(row: ProviderView): DraftForm {
   };
 }
 
-function buildPayload(form: DraftForm, isCreate: boolean): ProviderCreateInput | ProviderUpdateInput {
+function buildPayload(
+  form: DraftForm,
+  isCreate: boolean,
+): ProviderCreateInput | ProviderUpdateInput {
   const out: Record<string, unknown> = {
     name: form.name,
     model: form.model,
@@ -166,9 +169,7 @@ export function ProviderSettings() {
         </Button>
       </div>
 
-      {error ? (
-        <p className="mb-3 rounded bg-red-50 p-2 text-xs text-red-600">{error}</p>
-      ) : null}
+      {error ? <p className="mb-3 rounded bg-red-50 p-2 text-xs text-red-600">{error}</p> : null}
 
       <div className="mb-4 space-y-2">
         {list.length === 0 ? (
@@ -184,9 +185,7 @@ export function ProviderSettings() {
                   <span className="font-mono">{row.id}</span>
                   <span className="text-slate-500">·</span>
                   <span>{row.name}</span>
-                  {row.isActive ? (
-                    <span className="text-emerald-600">● active</span>
-                  ) : null}
+                  {row.isActive ? <span className="text-emerald-600">● active</span> : null}
                   <span className="rounded bg-slate-200 px-1 text-[10px] text-slate-600">
                     {row.source}
                   </span>

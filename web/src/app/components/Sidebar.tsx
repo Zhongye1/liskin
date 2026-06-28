@@ -30,9 +30,7 @@ export function Sidebar({
         <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-accent text-sm font-semibold text-white">
           L
         </span>
-        <span className="text-[15px] font-semibold tracking-tight text-ink">
-          Liskin Code
-        </span>
+        <span className="text-[15px] font-semibold tracking-tight text-ink">Liskin Code</span>
         <Badge tone="neutral" className="ml-1">
           preview
         </Badge>
@@ -66,9 +64,7 @@ export function Sidebar({
 
       {/* 会话列表 */}
       <div className="mt-4 flex items-center justify-between px-4 pb-1">
-        <span className="text-xs font-medium uppercase tracking-wide text-ink-faint">
-          Sessions
-        </span>
+        <span className="text-xs font-medium uppercase tracking-wide text-ink-faint">Sessions</span>
         <button
           type="button"
           onClick={onNewSession}
@@ -80,9 +76,7 @@ export function Sidebar({
 
       <div className="flex-1 space-y-0.5 overflow-auto px-2 pb-2">
         {sessions.length === 0 ? (
-          <p className="px-2 py-4 text-xs text-ink-faint">
-            还没有会话，点击上方开始
-          </p>
+          <p className="px-2 py-4 text-xs text-ink-faint">还没有会话，点击上方开始</p>
         ) : (
           sessions.map((s) => {
             const active = s.id === activeSessionId;
@@ -107,9 +101,7 @@ export function Sidebar({
                     {sessionTitle(s)}
                   </span>
                   {s.messageCount > 0 ? (
-                    <Badge tone={active ? 'accent' : 'neutral'}>
-                      {s.messageCount}
-                    </Badge>
+                    <Badge tone={active ? 'accent' : 'neutral'}>{s.messageCount}</Badge>
                   ) : null}
                 </div>
                 <span className="truncate text-xs text-ink-faint">{project}</span>

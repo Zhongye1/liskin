@@ -36,29 +36,15 @@ export default {
         danger: '#c5533f',
       },
       fontFamily: {
-        sans: [
-          'Inter',
-          '-apple-system',
-          'BlinkMacSystemFont',
-          'Segoe UI',
-          'sans-serif',
-        ],
-        mono: [
-          'ui-monospace',
-          'SFMono-Regular',
-          'Menlo',
-          'Consolas',
-          'monospace',
-        ],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
       },
       borderRadius: {
         xl2: '1rem',
       },
       boxShadow: {
-        panel:
-          '0 1px 2px rgba(43, 39, 34, 0.04), 0 8px 24px rgba(43, 39, 34, 0.06)',
-        composer:
-          '0 1px 0 rgba(43, 39, 34, 0.04), 0 6px 16px rgba(43, 39, 34, 0.08)',
+        panel: '0 1px 2px rgba(43, 39, 34, 0.04), 0 8px 24px rgba(43, 39, 34, 0.06)',
+        composer: '0 1px 0 rgba(43, 39, 34, 0.04), 0 6px 16px rgba(43, 39, 34, 0.08)',
       },
     },
   },

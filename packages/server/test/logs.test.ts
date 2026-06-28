@@ -50,7 +50,11 @@ afterEach(() => {
   }
 });
 
-async function readSomeSSE(res: Response, untilContains: string, timeoutMs = 1500): Promise<string> {
+async function readSomeSSE(
+  res: Response,
+  untilContains: string,
+  timeoutMs = 1500,
+): Promise<string> {
   const reader = res.body!.getReader();
   const dec = new TextDecoder();
   let out = '';

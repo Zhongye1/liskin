@@ -9,9 +9,7 @@ export function EmptyState() {
           L
         </span>
         <p className="text-lg font-medium text-ink">Liskin Code</p>
-        <p className="mt-1 text-sm text-ink-faint">
-          从左侧选择一个会话，或创建新会话开始
-        </p>
+        <p className="mt-1 text-sm text-ink-faint">从左侧选择一个会话，或创建新会话开始</p>
       </div>
     </div>
   );

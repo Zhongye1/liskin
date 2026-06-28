@@ -109,8 +109,7 @@ export type ContentBlock =
   | { type: 'image'; source: ImageSource };
 
 export type ImageSource =
-  | { kind: 'base64'; mediaType: string; data: string }
-  | { kind: 'url'; url: string };
+  { kind: 'base64'; mediaType: string; data: string } | { kind: 'url'; url: string };
 ```
 
 `ContentBlock` 是一个**封闭的 discriminated union**。新增能力 = 新增 variant，**绝不**改已有 variant 的字段含义。
@@ -218,11 +217,7 @@ export type StreamEvent =
   | { type: 'error'; error: NormalizedError };
 
 export type StopReason =
-  | 'end_turn'
-  | 'tool_use'
-  | 'max_tokens'
-  | 'stop_sequence'
-  | 'content_filter';
+  'end_turn' | 'tool_use' | 'max_tokens' | 'stop_sequence' | 'content_filter';
 
 export interface Usage {
   inputTokens: number;
@@ -887,8 +882,7 @@ function messageToV1Msg(m: Message): Msg[] { /* 一对多：tool_result block �
 // =====================================================================
 
 export type ImageSource =
-  | { kind: 'base64'; mediaType: string; data: string }
-  | { kind: 'url'; url: string };
+  { kind: 'base64'; mediaType: string; data: string } | { kind: 'url'; url: string };
 
 export type ContentBlock =
   | { type: 'text'; text: string }
@@ -953,11 +947,7 @@ export interface NormalizedError {
 // =====================================================================
 
 export type StopReason =
-  | 'end_turn'
-  | 'tool_use'
-  | 'max_tokens'
-  | 'stop_sequence'
-  | 'content_filter';
+  'end_turn' | 'tool_use' | 'max_tokens' | 'stop_sequence' | 'content_filter';
 
 export interface Usage {
   inputTokens: number;
