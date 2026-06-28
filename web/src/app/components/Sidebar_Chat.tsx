@@ -2,7 +2,7 @@ import type { SessionInfo } from '@liskin/core';
 import { Badge, IconButton, Pill } from '../../shared/ui/primitives';
 import { IconCloud, IconGitBranch, IconPlus, IconSettings } from '../../shared/ui/icons';
 
-interface SidebarProps {
+interface Sidebar_Chat_Props {
   sessions: SessionInfo[];
   activeSessionId?: string;
   project?: string;
@@ -15,14 +15,14 @@ interface SidebarProps {
  * 左侧栏：品牌头、内联 composer、项目/Cloud 选择、会话列表、设置入口。
  * 纯展示组件——数据与回调由 App（连 store）注入，便于在预览页用 mock 复用。
  */
-export function Sidebar({
+export function Sidebar_Chat({
   sessions,
   activeSessionId,
   project = 'liskin/workspace',
   onNewSession,
   onSelectSession,
   onOpenSettings,
-}: SidebarProps) {
+}: Sidebar_Chat_Props) {
   return (
     <aside className="flex w-72 shrink-0 flex-col bg-sidebar">
       {/* 品牌头 */}

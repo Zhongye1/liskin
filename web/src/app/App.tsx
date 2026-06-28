@@ -1,7 +1,8 @@
 import { Outlet, useNavigate, useParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useSessionStore } from '../features/conversation/store/session-store';
-import { Sidebar } from './components/Sidebar';
+import { Sidebar_Chat } from './components/Sidebar_Chat';
+import { Sidebar_Router } from './components/Sidebar_Router';
 
 /**
  * 应用外壳：顶部浏览器外壳 + 左侧会话栏 + 右侧 <Outlet/> 子路由。
@@ -36,7 +37,8 @@ export default function App() {
     <div className="flex h-screen flex-col bg-canvas">
       {/* <BrowserChrome /> */}
       <div className="flex min-h-0 flex-1 overflow-hidden bg-panel">
-        <Sidebar
+        <Sidebar_Router />
+        <Sidebar_Chat
           sessions={sessions}
           activeSessionId={activeSessionId}
           onNewSession={handleNewSession}
