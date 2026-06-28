@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useSessionStore } from '../store/session-store';
 import { TurnItem } from './TurnItem';
+import { IconButton } from '../../../shared/ui/primitives';
+import { IconChevronDown, IconSend, IconStop } from '../../../shared/ui/icons';
 
 /**
  * 单个会话的对话视图。
@@ -10,16 +12,8 @@ import { TurnItem } from './TurnItem';
  */
 export function Conversation() {
   const { sessionId } = useParams<{ sessionId: string }>();
-  const {
-    turns,
-    status,
-    error,
-    draft,
-    selectSession,
-    setDraft,
-    send,
-    interrupt,
-  } = useSessionStore();
+  const { turns, status, error, draft, selectSession, setDraft, send, interrupt } =
+    useSessionStore();
 
   // sessionId 变化时加载会话历史
   useEffect(() => {
@@ -38,26 +32,42 @@ export function Conversation() {
   });
 
   useEffect(() => {
-    if (turns.length === 0) {return;}
+    if (turns.length === 0) {
+      return;
+    }
     const el = scrollRef.current;
-    if (!el) {return;}
+    if (!el) {
+      return;
+    }
     el.scrollTo({ top: el.scrollHeight });
   }, [turns]);
 
   const handleSend = () => {
     const text = draft.trim();
-    if (!text || status === 'streaming' || !sessionId) {return;}
+    if (!text || status === 'streaming' || !sessionId) {
+      return;
+    }
     void send(sessionId, text);
   };
 
   const items = virtualizer.getVirtualItems();
+  const streaming = status === 'streaming';
+  const title = turns[0]?.userContent?.slice(0, 48) ?? 'New session';
 
   return (
     <div className="flex h-full flex-col">
+      {/* 面板标题 */}
+      <header className="flex items-center justify-between border-b border-line px-5 py-3">
+        <div className="flex items-center gap-2">
+          <h1 className="truncate text-sm font-medium text-ink">{title}</h1>
+          <IconChevronDown size={15} className="text-ink-faint" />
+        </div>
+      </header>
+
       {/* 时间线 */}
-      <div ref={scrollRef} className="flex-1 overflow-auto p-4">
+      <div ref={scrollRef} className="flex-1 overflow-auto px-5 py-5">
         {turns.length === 0 ? (
-          <p className="text-sm text-slate-400">输入任务开始对话…</p>
+          <p className="text-sm text-ink-faint">输入任务开始对话…</p>
         ) : (
           <div
             style={{
@@ -67,7 +77,9 @@ export function Conversation() {
           >
             {items.map((vi) => {
               const turn = turns[vi.index];
-              if (!turn) {return null;}
+              if (!turn) {
+                return null;
+              }
               return (
                 <div
                   key={turn.id}
@@ -80,7 +92,7 @@ export function Conversation() {
                     width: '100%',
                     transform: `translateY(${vi.start}px)`,
                   }}
-                  className="pb-4"
+                  className="pb-5"
                 >
                   <TurnItem turn={turn} />
                 </div>
@@ -89,46 +101,50 @@ export function Conversation() {
           </div>
         )}
         {error ? (
-          <p className="mt-2 rounded bg-red-50 p-2 text-xs text-red-600">
+          <p className="mt-2 rounded-lg bg-danger/10 p-2 text-xs text-danger">
             {error.message}
           </p>
         ) : null}
       </div>
 
       {/* 输入栏 */}
-      <div className="border-t bg-white p-3">
-        <div className="flex gap-2">
-          <input
-            className="flex-1 rounded-md border px-3 py-2 text-sm"
+      <div className="px-5 pb-5">
+        <div className="flex items-end gap-2 rounded-xl2 border border-line bg-card p-2 shadow-composer focus-within:border-accent/50">
+          <textarea
+            rows={1}
+            className="max-h-40 flex-1 resize-none bg-transparent px-2 py-1.5 text-sm text-ink placeholder:text-ink-faint focus:outline-none"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="例如：读 README.md 并总结要点"
+            placeholder="Reply to Liskin…"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 handleSend();
               }
             }}
-            disabled={status === 'streaming'}
+            disabled={streaming}
           />
-          {status === 'streaming' ? (
-            <button
-              type="button"
+          {streaming ? (
+            <IconButton
               onClick={() => {
-                if (sessionId) {void interrupt(sessionId);}
+                if (sessionId) {
+                  void interrupt(sessionId);
+                }
               }}
-              className="rounded-md border px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+              title="停止"
+              className="bg-danger/10 text-danger hover:bg-danger/20"
             >
-              停止
-            </button>
+              <IconStop size={15} />
+            </IconButton>
           ) : (
-            <button
-              type="button"
+            <IconButton
               onClick={handleSend}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+              title="发送"
+              disabled={!draft.trim()}
+              className="bg-accent text-white hover:bg-accent-ink disabled:bg-line disabled:text-ink-faint"
             >
-              发送
-            </button>
+              <IconSend size={15} />
+            </IconButton>
           )}
         </div>
       </div>

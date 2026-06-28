@@ -1,23 +1,29 @@
 import type { Turn } from '../lib/events';
 import { ToolStep, TextStep, ConfirmCard } from './Steps';
+import { IconSpinner } from '../../../shared/ui/icons';
 
 export function TurnItem({ turn }: { turn: Turn }) {
   return (
     <div className="space-y-3">
+      {/* 用户气泡 */}
       <div className="flex justify-end">
-        <div className="max-w-[80%] rounded-lg bg-slate-800 px-3 py-2 text-sm text-white">
+        <div className="max-w-[80%] rounded-xl2 rounded-br-md bg-accent-soft px-4 py-2.5 text-sm leading-relaxed text-accent-ink">
           {turn.userContent}
         </div>
       </div>
-      <div className="space-y-2">
+
+      {/* assistant 步骤序列 */}
+      <div className="space-y-1.5">
         {turn.steps.map((step) => {
-          if (step.kind === 'text') {return <TextStep key={step.id} step={step} />;}
+          if (step.kind === 'text') {
+            return <TextStep key={step.id} step={step} />;
+          }
           return <ToolStep key={step.id} step={step} />;
         })}
         {turn.status === 'running' ? (
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-blue-500" />
-            运行中…
+          <div className="flex items-center gap-2 pl-1 text-xs text-ink-faint">
+            <IconSpinner size={13} />
+            <span className="animate-pulse">Pondering…</span>
           </div>
         ) : null}
       </div>
