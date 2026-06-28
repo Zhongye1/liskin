@@ -2,8 +2,13 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import  setupLocatorUI  from '@locator/runtime';
 import { router } from './router';
 import '../index.css';
+
+if (import.meta.env.DEV) {
+  setupLocatorUI();
+}
 
  const root = document.querySelector('#root');
  if (!root) {
