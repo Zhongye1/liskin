@@ -372,13 +372,18 @@ export class InProcessKernelClient implements KernelClient {
         break;
       }
       case 'tool_confirm_required': {
-        // 暂停前先 flush assistant（含本轮 toolCalls）
+        // 为当前需要确认之外的 toolCall 补上占位消息，防止孤立
+        this.fillOrphanedToolMessages(messages, acc, ev.call.id);
         this.flushAssistant(messages, acc);
         this.persist(sessionId, messages);
         queue.push({ type: 'ToolConfirmRequired', turnId, call: ev.call });
         break;
       }
       case 'done': {
+        // 非正常完成时，补上未执行的 toolCall 占位消息
+        if (ev.reason !== 'completed') {
+          this.fillOrphanedToolMessages(messages, acc);
+        }
         this.flushAssistant(messages, acc);
         queue.push({
           type: 'TurnEnd',
@@ -389,6 +394,8 @@ export class InProcessKernelClient implements KernelClient {
         break;
       }
       case 'error': {
+        // 补上未执行的 toolCall 占位消息，防止下次 LLM 调用报 insufficient tool messages
+        this.fillOrphanedToolMessages(messages, acc);
         this.flushAssistant(messages, acc);
         queue.push(
           { type: 'Error', turnId, sessionId, error: ev.error },
@@ -414,6 +421,59 @@ export class InProcessKernelClient implements KernelClient {
     });
     acc.assistantText = '';
     acc.pendingToolCalls = [];
+  }
+
+  /**
+   * 为已声明但尚未匹配 tool 消息的 toolCall 补上占位消息。
+   * 防止下次 LLM 调用时 OpenAI 报 "insufficient tool messages following tool_calls message"。
+   *
+   * @param exceptCallId 可选：跳过指定 callId（confirm 场景，该 call 会被上层重入执行）
+   */
+  private fillOrphanedToolMessages(
+    messages: Msg[],
+    acc: TurnAccumulator,
+    exceptCallId?: string,
+  ): void {
+    // 1) 如果 acc 中还有未 flush 的 toolCall，说明 assistant 消息尚未写入 messages。
+    //    这种情况下直接往 messages 写入占位 tool 消息即可（flushAssistant 会随后写入 assistant）。
+    if (acc.pendingToolCalls.length > 0) {
+      for (const call of acc.pendingToolCalls) {
+        if (call.id !== exceptCallId) {
+          messages.push({
+            role: 'tool',
+            content: 'Tool execution skipped (error or cancellation)',
+            toolCallId: call.id,
+          });
+        }
+      }
+      return;
+    }
+
+    // 2) assistant 已 flush 到 messages。扫描最后一条 assistant 消息的 toolCalls，
+    //    找出没有匹配 tool 消息的 id，补上占位。
+    const assistant = findLastAssistantWithToolCalls(messages);
+    if (!assistant?.toolCalls) {
+      return;
+    }
+
+    const assistantIdx = messages.indexOf(assistant);
+    const resolved = new Set<string>();
+    for (let i = assistantIdx + 1; i < messages.length; i++) {
+      const m = messages[i];
+      if (m.role === 'tool' && m.toolCallId) {
+        resolved.add(m.toolCallId);
+      }
+    }
+
+    for (const tc of assistant.toolCalls) {
+      if (tc.id !== exceptCallId && !resolved.has(tc.id)) {
+        messages.push({
+          role: 'tool',
+          content: 'Tool execution skipped (error or cancellation)',
+          toolCallId: tc.id,
+        });
+      }
+    }
   }
 
   /**
@@ -516,4 +576,17 @@ function mapDoneReason(reason: 'completed' | 'max_turns' | 'cancelled'): TurnEnd
 
 function isConfirmRequired(error: unknown): boolean {
   return error instanceof Error && error.name === 'ConfirmRequiredError';
+}
+
+/** 从 messages 尾部向前扫描，找到最后一条包含 toolCalls 的 assistant 消息。 */
+function findLastAssistantWithToolCalls(
+  messages: Msg[],
+): Extract<Msg, { role: 'assistant' }> | undefined {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (m.role === 'assistant' && 'toolCalls' in m && m.toolCalls && m.toolCalls.length > 0) {
+      return m as Extract<Msg, { role: 'assistant' }>;
+    }
+  }
+  return undefined;
 }
