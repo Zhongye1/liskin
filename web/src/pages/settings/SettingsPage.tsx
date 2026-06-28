@@ -1,8 +1,8 @@
-/* eslint-disable max-lines -- 旧组件，Step 3.3 会重写 */
+/* eslint-disable max-lines -- 旧组件 */
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { Button } from '../../../shared/ui/button';
+import { Button } from '../../shared/ui/button';
 import {
   activateProvider,
   createProvider,
@@ -12,7 +12,7 @@ import {
   type ProviderView,
   type ProviderCreateInput,
   type ProviderUpdateInput,
- } from '../services/providers';
+} from './model/providers';
 
 interface DraftForm {
   id: string;
@@ -49,7 +49,10 @@ function rowToForm(row: ProviderView): DraftForm {
   };
 }
 
-function buildPayload(form: DraftForm, isCreate: boolean): ProviderCreateInput | ProviderUpdateInput {
+function buildPayload(
+  form: DraftForm,
+  isCreate: boolean,
+): ProviderCreateInput | ProviderUpdateInput {
   const out: Record<string, unknown> = {
     name: form.name,
     model: form.model,
@@ -78,7 +81,7 @@ function buildPayload(form: DraftForm, isCreate: boolean): ProviderCreateInput |
   return out as ProviderCreateInput | ProviderUpdateInput;
 }
 
-export function ProviderSettings() {
+export function SettingsPage() {
   const [list, setList] = useState<ProviderView[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -166,9 +169,7 @@ export function ProviderSettings() {
         </Button>
       </div>
 
-      {error ? (
-        <p className="mb-3 rounded bg-red-50 p-2 text-xs text-red-600">{error}</p>
-      ) : null}
+      {error ? <p className="mb-3 rounded bg-red-50 p-2 text-xs text-red-600">{error}</p> : null}
 
       <div className="mb-4 space-y-2">
         {list.length === 0 ? (
@@ -184,9 +185,7 @@ export function ProviderSettings() {
                   <span className="font-mono">{row.id}</span>
                   <span className="text-slate-500">·</span>
                   <span>{row.name}</span>
-                  {row.isActive ? (
-                    <span className="text-emerald-600">● active</span>
-                  ) : null}
+                  {row.isActive ? <span className="text-emerald-600">● active</span> : null}
                   <span className="rounded bg-slate-200 px-1 text-[10px] text-slate-600">
                     {row.source}
                   </span>

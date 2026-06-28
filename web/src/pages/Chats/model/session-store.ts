@@ -3,7 +3,7 @@ import type { EventMsg, NormalizedError, SessionInfo, ToolCall } from '@liskin/c
 import type { KernelClient } from '@liskin/protocol';
 
 import { HttpSseKernelClient } from '../../../api';
-import { applyEvent, messagesToTurns, newTurn, type Turn } from '../lib/events';
+import { applyEvent, messagesToTurns, newTurn, type Turn } from './events';
 
 type Status = 'idle' | 'streaming' | 'awaiting_confirm' | 'error';
 
@@ -30,9 +30,7 @@ interface SessionState {
 const kernel: KernelClient = new HttpSseKernelClient();
 
 type SetFn = (
-  partial:
-    | Partial<SessionState>
-    | ((s: SessionState) => Partial<SessionState>),
+  partial: Partial<SessionState> | ((s: SessionState) => Partial<SessionState>),
 ) => void;
 
 // —— rAF 批量 flush —— //
@@ -41,13 +39,17 @@ let flushScheduled = false;
 
 function flushTokens(set: SetFn): void {
   flushScheduled = false;
-  if (pendingTokens.size === 0) {return;}
+  if (pendingTokens.size === 0) {
+    return;
+  }
   const batches = [...pendingTokens.entries()];
   pendingTokens.clear();
   set((s) => ({
     turns: s.turns.map((t) => {
       const chunks = batches.find(([id]) => id === t.id)?.[1];
-      if (!chunks) {return t;}
+      if (!chunks) {
+        return t;
+      }
       const next = { ...t, steps: t.steps.map((st) => ({ ...st })) };
       for (const text of chunks) {
         applyEvent(next, { type: 'Token', turnId: t.id, text });
@@ -58,7 +60,9 @@ function flushTokens(set: SetFn): void {
 }
 
 function scheduleFlush(set: SetFn): void {
-  if (flushScheduled) {return;}
+  if (flushScheduled) {
+    return;
+  }
   flushScheduled = true;
   if (typeof requestAnimationFrame === 'function') {
     requestAnimationFrame(() => flushTokens(set));
@@ -94,9 +98,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   newSession: async (system?: string) => {
     try {
-      const handle = await kernel.createSession(
-        system ? { system } : undefined,
-      );
+      const handle = await kernel.createSession(system ? { system } : undefined);
       set({
         turns: [],
         status: 'idle',
@@ -133,8 +135,12 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   setDraft: (v) => set({ draft: v }),
 
   send: async (sessionId, content) => {
-    if (!sessionId || !content.trim()) {return;}
-    if (get().status === 'streaming') {return;}
+    if (!sessionId || !content.trim()) {
+      return;
+    }
+    if (get().status === 'streaming') {
+      return;
+    }
 
     const turn = newTurn(`t-${Date.now()}`, content);
     set((s) => ({
@@ -160,15 +166,15 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         error: {
           message: error instanceof Error ? error.message : String(error),
         },
-        turns: s.turns.map((t) =>
-          t.id === turn.id ? { ...t, status: 'error' as const } : t,
-        ),
+        turns: s.turns.map((t) => (t.id === turn.id ? { ...t, status: 'error' as const } : t)),
       }));
     }
   },
 
   interrupt: async (sessionId) => {
-    if (!sessionId) {return;}
+    if (!sessionId) {
+      return;
+    }
     flushTokens(set);
     await kernel.interrupt(sessionId);
     set({ status: 'idle' });
@@ -176,7 +182,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   approveTool: async (sessionId) => {
     const { pendingConfirm } = get();
-    if (!sessionId || !pendingConfirm) {return;}
+    if (!sessionId || !pendingConfirm) {
+      return;
+    }
     flushTokens(set);
     set({ pendingConfirm: null, status: 'streaming' });
     await kernel.confirmTool(sessionId, pendingConfirm.id, 'approve');
@@ -184,7 +192,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   denyTool: async (sessionId) => {
     const { pendingConfirm } = get();
-    if (!sessionId || !pendingConfirm) {return;}
+    if (!sessionId || !pendingConfirm) {
+      return;
+    }
     flushTokens(set);
     set({ pendingConfirm: null, status: 'streaming' });
     await kernel.confirmTool(sessionId, pendingConfirm.id, 'deny');
@@ -216,7 +226,9 @@ function reduceEvent(ctx: ReduceCtx, ev: EventMsg): void {
 
   set((s) => ({
     turns: s.turns.map((t) => {
-      if (t.id !== turnId) {return t;}
+      if (t.id !== turnId) {
+        return t;
+      }
       const next = { ...t, steps: t.steps.map((st) => ({ ...st })) };
       applyEvent(next, ev);
       return next;

@@ -50,7 +50,11 @@ afterEach(() => {
   }
 });
 
-async function readSomeSSE(res: Response, untilContains: string, timeoutMs = 1500): Promise<string> {
+async function readSomeSSE(
+  res: Response,
+  untilContains: string,
+  timeoutMs = 1500,
+): Promise<string> {
   const reader = res.body!.getReader();
   const dec = new TextDecoder();
   let out = '';
@@ -83,7 +87,6 @@ describe('server /v1/logs/stream', () => {
     const logBus = new LogBus();
     // push(level, msg) 是单条语义：每条日志独立 push，level/msg 一一对应。
     logBus.push('info', 'first hello', 'warn', 'second warn');
-
     const app = createApp({
       llm: new ScriptedLLM(),
       tools: new NoopTools(),

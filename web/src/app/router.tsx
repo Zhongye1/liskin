@@ -1,8 +1,10 @@
 import { createBrowserRouter } from 'react-router-dom';
 import App from './App';
-import { Conversation } from '../features/conversation/components/Conversation';
-import { EmptyState } from '../features/conversation/components/EmptyState';
-import { ProviderSettings } from '../features/providers/components/ProviderSettings';
+import { Conversation } from '../pages/Chats/Conversation';
+import { EmptyState } from '../pages/Chats/EmptyState';
+import { SettingsPage } from '../pages/settings/SettingsPage';
+import { ProjectsPage } from '../pages/Projects/ProjectsPage';
+import { KnowledgePage } from '../pages/KnowledgeBase/KnowledgePage';
 import { ErrorBoundary } from '../shared/components/ErrorBoundary';
 
 export const router = createBrowserRouter([
@@ -19,7 +21,15 @@ export const router = createBrowserRouter([
       },
       {
         path: 'settings',
-        element: <ProviderSettings />,
+        element: <SettingsPage />,
+      },
+      {
+        path: 'projects',
+        element: <ProjectsPage />,
+      },
+      {
+        path: 'knowledge',
+        element: <KnowledgePage />,
       },
     ],
   },

@@ -30,7 +30,11 @@ const ConfirmSchema = z.object({
 export function mountSessionRoutes(
   app: Hono,
   kernel: InProcessKernelClient,
-  store: { loadSession(id: string): Promise<{ id: string; createdAt: string; updatedAt: string; messages: unknown[] } | null> },
+  store: {
+    loadSession(
+      id: string,
+    ): Promise<{ id: string; createdAt: string; updatedAt: string; messages: unknown[] } | null>;
+  },
 ): void {
   // —— 会话生命周期 —— //
 
@@ -95,11 +99,14 @@ export function mountSessionRoutes(
       } catch (error) {
         id += 1;
         await s.write(
-          toSseFrame({
-            type: 'Error',
-            sessionId,
-            error: { message: error instanceof Error ? error.message : String(error) },
-          }, id),
+          toSseFrame(
+            {
+              type: 'Error',
+              sessionId,
+              error: { message: error instanceof Error ? error.message : String(error) },
+            },
+            id,
+          ),
         );
       }
     });

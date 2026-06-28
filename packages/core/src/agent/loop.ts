@@ -216,15 +216,24 @@ export async function* runAgent(opts: RunAgentOptions): AsyncGenerator<AgentEven
     // 有工具调用 → 顺序执行（M1 简化版，并发优化留 M3+）
     for (const call of pendingToolCalls) {
       if (signal?.aborted) {
+        // 为当前及后续所有未执行的 toolCall 补上取消消息，防止孤立
+        const idx = pendingToolCalls.indexOf(call);
+        fillRemainingToolMessages(messages, pendingToolCalls.slice(idx), 'cancelled');
         yield { kind: 'done', reason: 'cancelled' };
         return;
       }
       const outcome = yield* invokeWithProgress(call, tools, confirmed);
       if (outcome.kind === 'confirm') {
+        // 为后续未执行的 toolCall 补上跳过消息（当前需要确认的 call 由上层重入处理）
+        const idx = pendingToolCalls.indexOf(call);
+        fillRemainingToolMessages(messages, pendingToolCalls.slice(idx + 1), 'confirm_required');
         yield { call: outcome.call, kind: 'tool_confirm_required' };
         return;
       }
       if (outcome.kind === 'error') {
+        // 为当前及后续所有未执行的 toolCall 补上错误消息
+        const idx = pendingToolCalls.indexOf(call);
+        fillRemainingToolMessages(messages, pendingToolCalls.slice(idx), outcome.message);
         yield { error: { message: outcome.message }, kind: 'error' };
         return;
       }
@@ -241,6 +250,24 @@ export async function* runAgent(opts: RunAgentOptions): AsyncGenerator<AgentEven
 
   // 达到 maxTurns 上限
   yield { kind: 'done', reason: 'max_turns' };
+}
+
+/**
+ * 为未执行的 toolCall 补上占位 tool 消息，保证 assistant.toolCalls 中每一项
+ * 都有配对的 role:'tool' 消息，避免下次 LLM 调用时报 "insufficient tool messages"。
+ */
+function fillRemainingToolMessages(
+  messages: Msg[],
+  remainingCalls: ToolCall[],
+  reason: string,
+): void {
+  for (const call of remainingCalls) {
+    messages.push({
+      content: `Tool execution skipped: ${reason}`,
+      role: 'tool',
+      toolCallId: call.id,
+    });
+  }
 }
 
 type ToolOutcome =

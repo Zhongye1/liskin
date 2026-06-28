@@ -21,8 +21,7 @@ http.interceptors.response.use(
   (res) => res,
   (error) => {
     if (axios.isAxiosError(error)) {
-      const msg = (error.response?.data as { error?: string })?.error
-        ?? error.message;
+      const msg = (error.response?.data as { error?: string })?.error ?? error.message;
       throw new ApiError(error.response?.status ?? 0, msg);
     }
     throw error;
@@ -39,9 +38,7 @@ export const sessions = {
     return http.get<{ sessions: unknown[] }>('/sessions').then((r) => r.data);
   },
   get(sessionId: string) {
-    return http
-      .get(`/sessions/${encodeURIComponent(sessionId)}`)
-      .then((r) => r.data);
+    return http.get(`/sessions/${encodeURIComponent(sessionId)}`).then((r) => r.data);
   },
   async close(sessionId: string): Promise<void> {
     await http.delete(`/sessions/${encodeURIComponent(sessionId)}`);
@@ -49,11 +46,7 @@ export const sessions = {
   async interrupt(sessionId: string): Promise<void> {
     await http.post(`/sessions/${encodeURIComponent(sessionId)}/interrupt`);
   },
-  confirm(
-    sessionId: string,
-    callId: string,
-    decision: 'approve' | 'deny',
-  ) {
+  confirm(sessionId: string, callId: string, decision: 'approve' | 'deny') {
     return http
       .post(`/sessions/${encodeURIComponent(sessionId)}/confirm`, {
         callId,

@@ -154,11 +154,11 @@ Unified Gateway 接口请求文档
 4. OpenAI Chat Completions 示例
 
 curl -X POST 'http://<gateway-host>/gateway/model' \
- -H 'Content-Type: application/json' \
- -H 'Authorizat
+-H 'Content-Type: application/json' \
+-H 'Authorizat
 -H 'x-protocol: openai' \
- -H 'x-api-form\
- -d '{
+-H 'x-api-form\
+-d '{
 "target_url":"https://api.openai.com/v1/chat/completions",
 "model": "ar
 "messages": [
@@ -172,10 +172,10 @@ curl -X POST 'http://<gateway-host>/gateway/model' \
 5. OpenAI Respon
 
 curl -X POST 'htodel' \
- -H 'Content-Type: application/json' \
- -H 'Authorizat
+-H 'Content-Type: application/json' \
+-H 'Authorizat
 -H 'x-api-format: openai-responses' \
- -d '{
+-d '{
 "target_url"org/v1/responses",
 "model": "ark/seed-code-0611",
 "input": "Hello",
@@ -187,10 +187,10 @@ curl -X POST 'htodel' \
 6. Anthropic Messages 示例
 
 curl -X POST 'http://<gateway-host>/gateway/model' \
- -H 'Content-Type: application/json' \
- -H 'Authorizat
+-H 'Content-Type: application/json' \
+-H 'Authorizat
 -H 'x-protocol: anthropic' \
- -H 'x-api-form
+-H 'x-api-form
 -d '{
 "target_url"org/v1/messages",
 "model": "claude-sonnet-4-6",

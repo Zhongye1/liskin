@@ -1,8 +1,8 @@
 这个问题非常关键，核心就是一句话：  
- 前后端联调先“定契约（IDL）”，再各自开发，最后用生成代码对齐。
+前后端联调先“定契约（IDL）”，再各自开发，最后用生成代码对齐。
 
 下面按你问的 4  
- 个点来讲：选型、联调流程、生成文件管理、怎么用（含示例）。
+个点来讲：选型、联调流程、生成文件管理、怎么用（含示例）。
 
 ---
 
@@ -89,7 +89,7 @@
   启动
 
 也就是说，先写  
- thrift，再由生成代码提供服务端骨架/类型，业务实现只填逻辑。
+thrift，再由生成代码提供服务端骨架/类型，业务实现只填逻辑。
 
 ---
 
@@ -111,39 +111,39 @@
 1. 先改 IDL（契约）
 
 // server/idl/prd/prd.thrift  
- struct SummarizeRequest {  
- 1: required string content  
- }  
- struct SummarizeResponse {  
- 1: required string summary  
- }  
- service PrdService {  
- SummarizeResponse Summarize(1: SummarizeRequest request)  
- } 2) 生成代码
+struct SummarizeRequest {  
+1: required string content  
+}  
+struct SummarizeResponse {  
+1: required string summary  
+}  
+service PrdService {  
+SummarizeResponse Summarize(1: SummarizeRequest request)  
+} 2) 生成代码
 
 cd server  
- go install github.com/example/rgo@latest  
- rgo generate
+go install github.com/example/rgo@latest  
+rgo generate
 
 3. 后端实现
 
 在 application/prd/service 实现 Summarize  
- 方法（方法签名按生成代码来）。
+方法（方法签名按生成代码来）。
 
 4. AGW 暴露 HTTP（可选）
 
 在 server/idl/agw/agw.thrift 增加：  
- SummarizeAgwResponse Summarize(1: SummarizeAgwRequest request)  
- (api.post="/api/prd/summarize")  
- 再生成、实现 AGW handler。
+SummarizeAgwResponse Summarize(1: SummarizeAgwRequest request)  
+(api.post="/api/prd/summarize")  
+再生成、实现 AGW handler。
 
 5. 前端调用
 
 await fetch('/api/prd/summarize', {  
- method: 'POST',  
- headers: { 'Content-Type': 'application/json' },  
- body: JSON.stringify({ content }),  
- });
+method: 'POST',  
+headers: { 'Content-Type': 'application/json' },  
+body: JSON.stringify({ content }),  
+});
 
 ---
 

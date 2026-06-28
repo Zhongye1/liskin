@@ -21,7 +21,9 @@ class ScriptedLLM implements LLMPort {
   chatStream(_req: ChatRequest): AsyncIterable<LLMEvent> {
     const events = this.turns[this.idx++] ?? [{ kind: 'done' as const }];
     return (async function* () {
-      for (const ev of events) {yield ev;}
+      for (const ev of events) {
+        yield ev;
+      }
     })();
   }
 }
@@ -45,7 +47,9 @@ beforeEach(() => {
 
 afterEach(() => {
   store.close();
-  if (fs.existsSync(dbPath)) {fs.unlinkSync(dbPath);}
+  if (fs.existsSync(dbPath)) {
+    fs.unlinkSync(dbPath);
+  }
 });
 
 async function readSSE(res: Response): Promise<string> {
@@ -54,7 +58,9 @@ async function readSSE(res: Response): Promise<string> {
   let out = '';
   while (true) {
     const { value, done } = await reader.read();
-    if (done) {break;}
+    if (done) {
+      break;
+    }
     out += dec.decode(value, { stream: true });
   }
   return out;
@@ -77,7 +83,9 @@ describe('server app', () => {
 
   it('POST /v1/chat streams tokens then done; persists session', async () => {
     const app = createApp({
-      llm: new ScriptedLLM([[{ kind: 'token', text: 'hello' }, { kind: 'token', text: ' world' }, { kind: 'done' }]]),
+      llm: new ScriptedLLM([
+        [{ kind: 'token', text: 'hello' }, { kind: 'token', text: ' world' }, { kind: 'done' }],
+      ]),
       tools: new NoopTools(),
       store,
     });

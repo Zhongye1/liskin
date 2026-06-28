@@ -1,22 +1,22 @@
- import type { EventMsg, Msg, ToolCall, ToolResult } from '@liskin/core';
+import type { EventMsg, Msg, ToolCall, ToolResult } from '@liskin/core';
 
- export interface TextStep {
-   kind: 'text';
-   id: string;
-   parts: string[];
- }
- export interface ToolStep {
-   kind: 'tool';
-   id: string;
-   call: ToolCall;
-   status: 'pending' | 'confirm' | 'running' | 'done' | 'error';
-   stdout: string[];
-   stderr: string[];
-   result?: ToolResult;
- }
+export interface TextStep {
+  kind: 'text';
+  id: string;
+  parts: string[];
+}
+export interface ToolStep {
+  kind: 'tool';
+  id: string;
+  call: ToolCall;
+  status: 'pending' | 'confirm' | 'running' | 'done' | 'error';
+  stdout: string[];
+  stderr: string[];
+  result?: ToolResult;
+}
 
- /** 时间线上的一个块：assistant 文本 或 工具调用。 */
- export type Step = TextStep | ToolStep;
+/** 时间线上的一个块：assistant 文本 或 工具调用。 */
+export type Step = TextStep | ToolStep;
 
 /** 一轮 = 一次 UserTurn + 它触发的所有事件聚合成 steps。 */
 export interface Turn {
@@ -32,12 +32,12 @@ function newStepId(): string {
   return `step-${stepSeq}`;
 }
 
- // 只复用「最后一个 step 是 text」的情况：保证 token/tool 按到达顺序交织，
- // 即 text→tool→text 会开新的 text step，而不是把后续 token 错误追加到 tool 之前的块。
- function lastTextStep(turn: Turn): TextStep | undefined {
-   const last = turn.steps.at(-1);
-   return last && last.kind === 'text' ? last : undefined;
- }
+// 只复用「最后一个 step 是 text」的情况：保证 token/tool 按到达顺序交织，
+// 即 text→tool→text 会开新的 text step，而不是把后续 token 错误追加到 tool 之前的块。
+function lastTextStep(turn: Turn): TextStep | undefined {
+  const last = turn.steps.at(-1);
+  return last && last.kind === 'text' ? last : undefined;
+}
 
 function findToolStep(turn: Turn, callId: string): Step | undefined {
   return turn.steps.find((s) => s.kind === 'tool' && s.id === callId);
@@ -77,8 +77,11 @@ export function applyEvent(turn: Turn, ev: EventMsg): void {
     case 'ToolProgress': {
       const step = findToolStep(turn, ev.callId);
       if (step && step.kind === 'tool') {
-        if (ev.stream === 'stdout') {step.stdout.push(ev.chunk);}
-        else {step.stderr.push(ev.chunk);}
+        if (ev.stream === 'stdout') {
+          step.stdout.push(ev.chunk);
+        } else {
+          step.stderr.push(ev.chunk);
+        }
         step.status = 'running';
       }
       return;
@@ -93,7 +96,9 @@ export function applyEvent(turn: Turn, ev: EventMsg): void {
     }
     case 'ToolConfirmRequired': {
       const step = findToolStep(turn, ev.call.id);
-      if (step && step.kind === 'tool') {step.status = 'confirm';}
+      if (step && step.kind === 'tool') {
+        step.status = 'confirm';
+      }
       return;
     }
     case 'TurnEnd': {
@@ -162,7 +167,11 @@ export function messagesToTurns(messages: Msg[]): Turn[] {
       }
       if (msg.role === 'assistant') {
         if (msg.content) {
-          current.steps.push({ kind: 'text', id: `hist-text-${turnSeq}-${current.steps.length}`, parts: [msg.content] });
+          current.steps.push({
+            kind: 'text',
+            id: `hist-text-${turnSeq}-${current.steps.length}`,
+            parts: [msg.content],
+          });
         }
         for (const call of msg.toolCalls ?? []) {
           const step: ToolStep = {
