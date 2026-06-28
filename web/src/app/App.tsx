@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useSessionStore } from '../pages/Chats/model/session-store';
 import { Sidebar_Chat } from './components/Sidebar_Chat';
 import { Sidebar_Router } from './components/Sidebar_Router';
+import { HeadBar_Top } from './components/HeadBar_Top';
 
 /**
  * 应用外壳：Sidebar_Router（常驻） + section 侧栏（按路由切换） + <Outlet/>。
@@ -39,7 +40,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen flex-col bg-canvas">
-      {/* <BrowserChrome /> */}
+      <HeadBar_Top onSettingsClick={() => navigate('/settings')} />
       <div className="flex min-h-0 flex-1 overflow-hidden bg-panel">
         <Sidebar_Router />
         {isChatSection && (

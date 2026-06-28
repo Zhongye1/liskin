@@ -8,7 +8,7 @@ export function Avatar({ label, src, size = 28 }: { label: string; src?: string;
     <img src={src} alt={label} width={size} height={size} className="rounded-full object-cover" />
   ) : (
     <span
-      className="inline-flex items-center justify-center rounded-full bg-accent-soft font-medium text-accent-ink"
+      className="inline-flex items-center justify-center rounded-full bg-amber-50 font-medium text-accent-ink"
       style={{ width: size, height: size, fontSize: size * 0.42 }}
     >
       {label.slice(0, 1).toUpperCase()}

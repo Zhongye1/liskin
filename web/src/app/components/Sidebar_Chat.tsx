@@ -1,4 +1,4 @@
-import type { SessionInfo } from '@liskin/core';
+import type { SessionInfo } from '@liskin/protocol';
 import { Badge, IconButton, Pill } from '../../shared/ui/primitives';
 import { Cloud, GitBranch, Plus, Settings } from 'lucide-react';
 
@@ -27,10 +27,7 @@ export function Sidebar_Chat({
     <aside className="flex w-72 shrink-0 flex-col bg-sidebar">
       {/* 品牌头 */}
       <div className="flex items-center gap-2 px-4 pb-3 pt-4">
-        <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-accent text-sm font-semibold text-white">
-          L
-        </span>
-        <span className="text-[15px] font-semibold tracking-tight text-ink">Liskin Code</span>
+        <span className="text-[15px] font-semibold tracking-tight text-ink">Workspace</span>
         <Badge tone="neutral" className="ml-1">
           preview
         </Badge>

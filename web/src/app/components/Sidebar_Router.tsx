@@ -35,8 +35,8 @@ export function Sidebar_Router() {
 
   // 文字显隐：始终渲染，opacity + overflow-hidden 控制
   const textClass = cn(
-    'truncate whitespace-nowrap transition-opacity duration-150',
-    expanded ? 'opacity-100' : 'opacity-0 overflow-hidden',
+    'truncate whitespace-nowrap transition-opacity',
+    expanded ? 'opacity-100 duration-150' : 'opacity-0 overflow-hidden duration-0',
   );
 
   return (
@@ -47,21 +47,6 @@ export function Sidebar_Router() {
           expanded ? 'w-36' : 'w-14',
         )}
       >
-        {/* 品牌 Logo — 标不动，文字 opacity 过渡 */}
-        <NavLink
-          to="/"
-          className={cn(
-            'flex items-center rounded-xl font-semibold gap-3 px-2 mb-2 h-10 text-white transition hover:bg-accent-ink bg-accent shrink-0',
-            expanded ? 'w-full' : 'w-10',
-          )}
-          title="Liskin Code"
-        >
-          <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/20 text-[11px] font-semibold">
-            L
-          </span>
-          <span className={cn(textClass, 'text-sm')}>Liskin</span>
-        </NavLink>
-
         {/* 导航项：统一结构，Tooltip 展开态受控关闭 */}
         {NAV_ITEMS.map((item) => {
           const active = isActive(item);
@@ -111,19 +96,30 @@ export function Sidebar_Router() {
             size={15}
             strokeWidth={1.8}
             className={cn(
-              'transition-opacity duration-150 align-middle',
-              expanded ? 'opacity-100' : 'opacity-0 absolute inset-0 m-auto',
+              'transition-opacity',
+              expanded
+                ? 'opacity-100 duration-150'
+                : 'opacity-0 absolute inset-0 m-auto duration-0',
             )}
           />
           <ChevronRight
             size={15}
             strokeWidth={1.8}
             className={cn(
-              'transition-opacity duration-150',
-              expanded ? 'opacity-0 absolute inset-0 m-auto' : 'opacity-100',
+              'transition-opacity',
+              expanded
+                ? 'opacity-0 absolute inset-0 m-auto duration-0'
+                : 'opacity-100 duration-150',
             )}
           />
-          <span className={cn(textClass, 'text-[11px]')}>收起</span>
+          <span
+            className={cn(
+              'text-[11px] whitespace-nowrap transition-opacity',
+              expanded ? 'opacity-100 duration-150' : 'opacity-0 absolute duration-0',
+            )}
+          >
+            收起
+          </span>
         </button>
       </nav>
     </Tooltip.Provider>
