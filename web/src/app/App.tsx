@@ -1,7 +1,6 @@
 import { Outlet, useNavigate, useParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useSessionStore } from '../features/conversation/store/session-store';
-import { BrowserChrome } from './components/BrowserChrome';
 import { Sidebar } from './components/Sidebar';
 
 /**
@@ -35,7 +34,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen flex-col bg-canvas">
-      <BrowserChrome />
+      {/* <BrowserChrome /> */}
       <div className="flex min-h-0 flex-1 overflow-hidden bg-panel">
         <Sidebar
           sessions={sessions}
